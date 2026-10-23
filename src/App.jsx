@@ -64,11 +64,11 @@ export default function App() {
           {/* key resets page state when switching pages */}
           <Page key={route} />
         </main>
-        <footer className="mx-auto w-full max-w-6xl px-4 pb-8 text-muted-foreground text-xs md:px-6 xl:px-10">
-          {config.useMockApi
-            ? 'Mock mode: data and send results are simulated in this browser.'
-            : `Connected to ${config.apiBaseUrl || 'the backend through the dev proxy'}.`}
-        </footer>
+        {config.useMockApi && (
+          <footer className="mx-auto w-full max-w-6xl px-4 pb-8 text-muted-foreground text-xs md:px-6 xl:px-10">
+            Mock mode: data and send results are simulated in this browser.
+          </footer>
+        )}
       </div>
       <Toaster theme={theme} position="bottom-right" richColors closeButton />
     </TooltipProvider>

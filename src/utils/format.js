@@ -29,3 +29,22 @@ export function outcomeTone({ accepted, failed }) {
   if (!accepted) return 'error';
   return 'warning';
 }
+
+const RELATIVE_UNITS = [
+  ['year', 31536000],
+  ['month', 2592000],
+  ['week', 604800],
+  ['day', 86400],
+  ['hour', 3600],
+  ['minute', 60],
+];
+
+// "5 minutes ago", "yesterday", "just now". An empty string for a bad date.
+export function formatRelative(iso, now = Date.now()) {
+  if (!iso) return '';
+  const seconds = (new Date(iso).getTime() - now) / 1000;
+  if (Number.isNaN(seconds)) return '';
+  if (Math.abs(seconds) < 45) return 'just now';
+  const [unit, size] = RELATIVE_UNITS.find(([, s]) => Math.abs(seconds) >= s) || RELATIVE_UNITS.at(-1);
+  return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round(seconds / size), unit);
+}

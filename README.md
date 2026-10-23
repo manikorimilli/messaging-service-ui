@@ -148,7 +148,7 @@ src/
   With Twilio or the primary provider selected, the list shows the Twilio test values (`sms_2fa`,
   `sms_appointment_reminders`, ...), which are the only bodies Twilio accepts. Vonage and other providers get
   free-text samples. Both lists live in `src/data/sampleTemplates.js`.
-- **Scheduled jobs** lists runs of the backend's scheduled job, newest first, 5 per page by default (the backend
+- **Scheduled jobs** lists runs of the backend's scheduled job, newest first, 10 per page by default (the backend
   returns every run, so pages are cut in the browser), and refreshes every 30 seconds
   while the toggle is on. **Details** opens one run with each provider's per-recipient results. The page is
   read-only: the backend owns the schedule and its targets file, and the API has no way to start or change a

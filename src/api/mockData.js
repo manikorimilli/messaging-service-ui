@@ -108,14 +108,17 @@ function minutesAgo(minutes, extraMs = 0) {
   return new Date(Date.now() - minutes * 60000 + extraMs).toISOString();
 }
 
+// Same rule as the backend: COMPLETED when every group was sent and every number
+// accepted, FAILED when none was accepted, PARTIAL otherwise.
 function mockRun(id, minutes, groups) {
   const total = groups.reduce((n, g) => n + g.total, 0);
   const accepted = groups.reduce((n, g) => n + g.accepted, 0);
+  const everyGroupSent = groups.every((g) => g.status === 'SENT');
   return {
     'run-id': id,
     'started-at': minutesAgo(minutes),
-    'finished-at': minutesAgo(minutes, 1200),
-    status: 'PARTIAL',
+    'finished-at': minutesAgo(minutes, 700 + total * 90),
+    status: everyGroupSent && accepted === total ? 'COMPLETED' : accepted === 0 ? 'FAILED' : 'PARTIAL',
     'targets-version': '2026-10-20',
     total,
     accepted,
@@ -124,43 +127,67 @@ function mockRun(id, minutes, groups) {
   };
 }
 
-const TWILIO_REJECTED = {
-  status: 'FAILED',
-  code: 'PROVIDER_REJECTED',
-  'provider-error-code': '572006',
-  detail: 'Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates.',
+const FAILURES = {
+  TWILIO: {
+    status: 'FAILED',
+    code: 'PROVIDER_REJECTED',
+    'provider-error-code': '572006',
+    detail: 'Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates.',
+  },
+  VONAGE: { status: 'FAILED', code: 'PROVIDER_TIMEOUT', detail: 'Provider did not respond within 10 seconds' },
 };
 
-function mockGroups() {
-  return [
-    {
-      provider: 'TWILIO',
-      status: 'SENT',
-      total: 2,
+// One provider group: the first `failed` numbers fail and the rest are accepted.
+// skipped=true imitates a disabled provider: nothing is sent and the group has an error.
+function mockGroup(provider, total, failed, seed, skipped = false) {
+  if (skipped) {
+    return {
+      provider,
+      status: 'SKIPPED',
+      total: 0,
       accepted: 0,
-      failed: 2,
-      'duplicates-removed': 0,
-      results: [
-        { to: '+919876543210', ...TWILIO_REJECTED },
-        { to: '+919876543211', ...TWILIO_REJECTED },
-      ],
-    },
-    {
-      provider: 'VONAGE',
-      status: 'SENT',
-      total: 1,
-      accepted: 1,
       failed: 0,
       'duplicates-removed': 0,
-      results: [{ to: '+919876543212', status: 'ACCEPTED', 'provider-message-id': 'mock-6bfdbd7f', 'provider-status': '0' }],
-    },
-  ];
+      error: { code: 'PROVIDER_UNAVAILABLE', message: `Provider '${provider}' is disabled.` },
+      results: [],
+    };
+  }
+  const results = Array.from({ length: total }, (_, i) => {
+    const to = `+9198765${String(43210 + i).padStart(5, '0')}`;
+    if (i < failed) return { to, ...FAILURES[provider] };
+    const id = `mock-${(seed * 977 + i * 131).toString(16).padStart(8, '0')}`;
+    return { to, status: 'ACCEPTED', 'provider-message-id': id, 'provider-status': provider === 'VONAGE' ? '0' : 'queued' };
+  });
+  return {
+    provider,
+    status: 'SENT',
+    total,
+    accepted: total - failed,
+    failed,
+    'duplicates-removed': seed % 3 === 0 ? 1 : 0,
+    results,
+  };
 }
 
+// One run a day, newest first: [provider, numbers, failed, skipped] per group.
+const RUN_PLAN = [
+  [['TWILIO', 2, 2], ['VONAGE', 1, 0]],
+  [['TWILIO', 3, 0], ['VONAGE', 2, 0]],
+  [['TWILIO', 3, 0], ['VONAGE', 2, 0]],
+  [['TWILIO', 3, 1], ['VONAGE', 2, 0]],
+  [['TWILIO', 0, 0, true], ['VONAGE', 2, 0]],
+  [['TWILIO', 3, 0], ['VONAGE', 1, 0]],
+  [['TWILIO', 2, 2], ['VONAGE', 1, 1]],
+  [['TWILIO', 3, 0], ['VONAGE', 2, 0]],
+  [['TWILIO', 2, 0], ['VONAGE', 2, 1]],
+];
+
 export function createMockJobRuns() {
-  return [
-    mockRun('mock-run-0003', 1, mockGroups()),
-    mockRun('mock-run-0002', 2, mockGroups()),
-    mockRun('mock-run-0001', 3, mockGroups()),
-  ];
+  return RUN_PLAN.map((plan, i) =>
+    mockRun(
+      `mock-run-${String(RUN_PLAN.length - i).padStart(4, '0')}`,
+      60 + i * 1440,
+      plan.map(([provider, total, failed, skipped], g) => mockGroup(provider, total, failed, i * 2 + g, skipped)),
+    ),
+  );
 }

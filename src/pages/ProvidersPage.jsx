@@ -117,7 +117,7 @@ function RegisterProviderDialog({ onClose, onSaved }) {
 
 function RowActions({ provider, locked, busy, onView, onEdit, onToggle, onDelete }) {
   const view = (
-    <Button variant="ghost" size="sm" className="rounded-full" onClick={onView} aria-label={`View ${provider.id}`}>
+    <Button variant="ghost" className="rounded-full px-3" onClick={onView} aria-label={`View ${provider.id}`}>
       <EyeIcon aria-hidden="true" />
       <span className="max-sm:sr-only">View</span>
     </Button>
@@ -126,7 +126,7 @@ function RowActions({ provider, locked, busy, onView, onEdit, onToggle, onDelete
   // A disabled button fires no hover or focus events, so the tooltip sits on a wrapper.
   if (isReadOnly(provider)) {
     return (
-      <div className="flex items-center justify-center gap-1">
+      <div className="flex items-center justify-center gap-1.5">
         {view}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -135,7 +135,7 @@ function RowActions({ provider, locked, busy, onView, onEdit, onToggle, onDelete
               className="inline-flex cursor-not-allowed rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring"
               aria-label={`${provider.id} is built-in and read-only. No other actions.`}
             >
-              <Button variant="ghost" size="icon-sm" className="pointer-events-none rounded-full" disabled tabIndex={-1} aria-hidden="true">
+              <Button variant="ghost" size="icon" className="pointer-events-none rounded-full" disabled tabIndex={-1} aria-hidden="true">
                 <EllipsisIcon />
               </Button>
             </span>
@@ -147,11 +147,11 @@ function RowActions({ provider, locked, busy, onView, onEdit, onToggle, onDelete
   }
 
   return (
-    <div className="flex items-center justify-center gap-1">
+    <div className="flex items-center justify-center gap-1.5">
       {view}
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={locked}>
-          <Button variant="ghost" size="icon-sm" className="rounded-full" aria-label={`More actions for ${provider.id}`}>
+          <Button variant="ghost" size="icon" className="rounded-full" aria-label={`More actions for ${provider.id}`}>
             {busy ? spinner : <EllipsisIcon aria-hidden="true" />}
           </Button>
         </DropdownMenuTrigger>
@@ -266,31 +266,31 @@ export function ProvidersPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="h-11 ps-4 sm:ps-5">ID</TableHead>
-                <TableHead className="hidden sm:table-cell">Display name</TableHead>
-                <TableHead className="hidden md:table-cell">Channels</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-px pe-3 text-center sm:pe-5">Actions</TableHead>
+                <TableHead className="h-12 ps-4 sm:ps-6">ID</TableHead>
+                <TableHead className="hidden px-4 sm:table-cell">Display name</TableHead>
+                <TableHead className="hidden px-4 md:table-cell">Channels</TableHead>
+                <TableHead className="px-2 sm:px-4">Status</TableHead>
+                <TableHead className="w-px pe-3 text-center sm:pe-6">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {providers.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="py-3.5 ps-4 sm:ps-5">
-                    <code className="rounded-md bg-muted px-2 py-1 font-semibold text-xs">{p.id}</code>
+                  <TableCell className="py-4.5 ps-4 sm:ps-6">
+                    <code className="rounded-lg bg-muted px-2.5 py-1.5 font-semibold text-sm">{p.id}</code>
                     {/* On phones the display name sits under the ID instead of in its own column. */}
-                    <span className="mt-1.5 block text-sm sm:hidden">{p['display-name'] || p.id}</span>
+                    <span className="mt-2 block text-sm sm:hidden">{p['display-name'] || p.id}</span>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <span className="font-medium">{p['display-name'] || p.id}</span>
+                  <TableCell className="hidden px-4 py-4.5 sm:table-cell">
+                    <span className="font-medium text-base">{p['display-name'] || p.id}</span>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden px-4 py-4.5 md:table-cell">
                     <ChannelBadges channels={p.channels} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2 py-4.5 sm:px-4">
                     <EnabledBadge enabled={p.enabled} />
                   </TableCell>
-                  <TableCell className="w-px pe-3 sm:pe-5">
+                  <TableCell className="w-px py-4.5 pe-3 sm:pe-6">
                     <RowActions
                       provider={p}
                       locked={actionsLocked}

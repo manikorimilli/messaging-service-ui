@@ -55,6 +55,11 @@
     --color-info-foreground: var(--info-foreground);
     --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
     --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+    --animate-ring-fill: ring-fill 1100ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+    @keyframes ring-fill {
+        from { stroke-dashoffset: var(--ring-length); }
+    }
 
     @keyframes pulse-dot {
         0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 55%, transparent); }

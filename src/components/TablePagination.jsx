@@ -4,7 +4,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const PAGE_SIZES = [5, 10, 20, 50];
-export const DEFAULT_PAGE_SIZE = 5;
+export const DEFAULT_PAGE_SIZE = 10;
 
 // Page numbers to show: first, last, and the current page with its neighbours;
 // gaps become an ellipsis. Example for page 5 of 9: 1 … 4 5 6 … 9
