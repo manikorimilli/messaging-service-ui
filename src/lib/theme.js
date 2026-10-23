@@ -1,14 +1,14 @@
 import { useSyncExternalStore } from 'react';
 
 // Light / dark / system theme. The choice is a per-browser convenience kept in
-// localStorage; "system" (the default) follows the operating system setting.
+// localStorage. Dark is the default; "system" follows the operating system.
 const KEY = 'theme';
 const media = window.matchMedia('(prefers-color-scheme: dark)');
 
 export function getPreference() {
   try {
     const value = localStorage.getItem(KEY);
-    return value === 'light' || value === 'dark' ? value : 'dark';
+    return value === 'light' || value === 'system' ? value : 'dark';
   } catch {
     return 'dark';
   }
@@ -25,8 +25,7 @@ export function applyTheme() {
 
 export function setPreference(preference) {
   try {
-    if (preference === 'system') localStorage.removeItem(KEY);
-    else localStorage.setItem(KEY, preference);
+    localStorage.setItem(KEY, preference);
   } catch {
     // Storage blocked (private mode): the choice still applies for this page view.
   }

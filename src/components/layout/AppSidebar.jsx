@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpRightIcon, MailIcon, MenuIcon, MessageCircleIcon, PhoneIcon } from 'lucide-react';
+import { MailIcon, MenuIcon, MessageCircleIcon, PhoneIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { EnvironmentPill, Logo } from './AppHeader.jsx';
-import { ThemeToggle } from './ThemeToggle.jsx';
+import { SearchButton, SearchPalette } from './SearchPalette.jsx';
+import { ThemeSwitcher } from './ThemeSwitcher.jsx';
 
 const FUTURE_CHANNELS = [
   { label: 'Email', icon: MailIcon },
@@ -12,9 +13,12 @@ const FUTURE_CHANNELS = [
   { label: 'WhatsApp', icon: MessageCircleIcon },
 ];
 
-function SidebarLinks({ routes, route, onNavigate, desktop = false }) {
+function SidebarLinks({ routes, route, onNavigate, onSearch, desktop = false }) {
   return (
-    <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 py-6">
+    <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6">
+      <div className="mb-5">
+        <SearchButton onOpen={onSearch} />
+      </div>
       <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</p>
       <nav aria-label="Main" className="space-y-1.5">
         {routes.map(({ key, label, icon: Icon }) => {
@@ -57,23 +61,27 @@ function SidebarLinks({ routes, route, onNavigate, desktop = false }) {
   );
 }
 
+// Environment and theme sit straight on the sidebar under a divider, like the
+// rest of the navigation, with no card around them.
 function SidebarFooter() {
   return (
-    <div className="mx-4 mb-4 shrink-0 rounded-xl border border-sidebar-border bg-background/40 p-3">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <div className="shrink-0 space-y-3 border-t border-sidebar-border px-4 pt-4 pb-5">
+      <div className="flex items-center justify-between gap-2 px-1">
         <span className="text-xs font-medium text-muted-foreground">Environment</span>
         <EnvironmentPill />
       </div>
-      <div className="flex items-center justify-between border-t border-sidebar-border pt-3">
-        <span className="text-xs font-medium text-muted-foreground">Appearance</span>
-        <ThemeToggle />
-      </div>
+      <ThemeSwitcher />
     </div>
   );
 }
 
 export function AppSidebar({ routes, route }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const openSearch = () => {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  };
 
   useEffect(() => {
     // Release the mobile dialog's focus trap if the viewport becomes desktop.
@@ -86,13 +94,10 @@ export function AppSidebar({ routes, route }) {
   return (
     <>
       <aside aria-label="Sidebar" className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
-        <div className="mx-4 border-b border-sidebar-border px-2 pt-7 pb-6 text-sm">
+        <div className="mx-4 border-b border-sidebar-border px-2 pt-6 pb-5 text-sm">
           <Logo />
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-            Your messaging workspace <ArrowUpRightIcon className="size-3" aria-hidden="true" />
-          </p>
         </div>
-        <SidebarLinks routes={routes} route={route} desktop />
+        <SidebarLinks routes={routes} route={route} onSearch={openSearch} desktop />
         <SidebarFooter />
       </aside>
 
@@ -105,13 +110,15 @@ export function AppSidebar({ routes, route }) {
           <SheetContent side="left" className="w-72 max-w-[calc(100%-2rem)] gap-0 bg-sidebar text-sidebar-foreground data-[side=left]:w-72">
             <SheetHeader className="border-b px-7 py-6">
               <SheetTitle>Messaging console</SheetTitle>
-              <SheetDescription>Your messaging workspace</SheetDescription>
+              <SheetDescription className="sr-only">Main navigation</SheetDescription>
             </SheetHeader>
-            <SidebarLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} />
+            <SidebarLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} onSearch={openSearch} />
             <SidebarFooter />
           </SheetContent>
         </Sheet>
       </header>
+
+      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} routes={routes} />
     </>
   );
 }
