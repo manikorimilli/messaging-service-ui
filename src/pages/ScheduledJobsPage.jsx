@@ -81,14 +81,14 @@ function JobRunDialog({ runId, onClose }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-11/12 flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-4xl">
+      <DialogContent className="job-run-details flex max-h-11/12 flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex flex-wrap items-center gap-2 text-lg">
             Job run details {run && <RunStatus status={run.status} />} <SimulatedBadge />
           </DialogTitle>
           <DialogDescription>Per-recipient results for each provider in this run.</DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 space-y-5 overflow-y-auto px-6 pb-6">
+        <div className="scrollbar-none min-h-0 space-y-5 overflow-y-auto px-6 pb-6 [&_[data-slot=table-container]]:scrollbar-none">
           {loading && <LoadingState label="Loading run..." />}
           <ErrorAlert error={error} />
           {run && (
@@ -159,7 +159,7 @@ export function ScheduledJobsPage() {
         eyebrow="Automation"
         title="Scheduled"
         accent="job runs"
-        description="Results of the backend's scheduled SMS job, newest first."
+        description="Results of the  scheduled SMS job, newest first."
       >
         <div className="flex h-10 items-center gap-2.5 rounded-full border bg-background/60 px-4">
           <Switch id={switchId} checked={autoRefresh} onCheckedChange={setAutoRefresh} />

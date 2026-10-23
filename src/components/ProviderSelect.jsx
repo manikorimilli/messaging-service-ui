@@ -32,7 +32,7 @@ export function ProviderSelect({ id, value, onChange, providers, loading, error,
                 {smsProviders.map((p) => (
                   <SelectItem key={p.id} value={p.id} disabled={!p.enabled}>
                     {providerLabel(p)}
-                    {!p.enabled && <StatusBadge className="ms-2 h-5">Disabled</StatusBadge>}
+                    {!p.enabled && <StatusBadge className="h-5">Disabled</StatusBadge>}
                   </SelectItem>
                 ))}
               </SelectGroup>

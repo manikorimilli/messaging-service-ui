@@ -11,7 +11,9 @@ A small React frontend for the multi-provider notification service. It covers:
 The backend supports SMS only. Email, Call and WhatsApp appear in the navigation as "soon" and do nothing yet.
 
 Built with React 19, Vite, Tailwind CSS v4 and [shadcn/ui](https://ui.shadcn.com) components (Radix).
-The sun/moon button in the top bar switches between light and dark in one click. Until it is first used the
+Desktop navigation lives in a fixed left sidebar; on smaller screens, the menu button opens a drawer.
+The sidebar includes the four main pages, upcoming channels, environment status and appearance controls.
+The sun/moon button at the bottom of the sidebar switches between light and dark in one click. Until it is first used the
 app follows the system setting; after that the choice is remembered in the browser. Font: Inter throughout (Geist Mono only in the JSON configuration editor and viewer).
 
 The shadcn components live in `src/components/ui/` and were added with the CLI as JavaScript
@@ -69,7 +71,7 @@ The proxy exists only in `npm run dev`. For a production build, set `VITE_API_BA
 before `npm run build`, and either enable CORS on the backend for the frontend's origin or serve both from
 the same origin behind a reverse proxy.
 
-The top bar shows which mode is active ("Mock mode" or a green "Live" pill).
+The sidebar shows which mode is active ("Mock mode" or a green "Live" pill).
 
 Backend API docs: `{baseURL}/swagger-ui.html` and `{baseURL}/v3/api-docs`.
 

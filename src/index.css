@@ -105,23 +105,26 @@
 }
 
 .dark {
-    --background: oklch(0.135 0.006 265);
-    --foreground: oklch(0.97 0.003 265);
-    --card: oklch(0.17 0.007 265);
-    --card-foreground: oklch(0.97 0.003 265);
-    --popover: oklch(0.19 0.008 265);
-    --popover-foreground: oklch(0.97 0.003 265);
+    color-scheme: dark;
+    /* Charcoal layers inspired by takeUforward's dashboard: each raised
+       surface is lighter than the canvas, with a restrained neutral tint. */
+    --background: #121315;
+    --foreground: #eceef2;
+    --card: #1c1e21;
+    --card-foreground: var(--foreground);
+    --popover: #24262a;
+    --popover-foreground: var(--foreground);
     --primary: oklch(0.63 0.2 262);
     --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.22 0.009 265);
-    --secondary-foreground: oklch(0.95 0.003 265);
-    --muted: oklch(0.21 0.008 265);
-    --muted-foreground: oklch(0.7 0.012 265);
-    --accent: oklch(0.24 0.02 262);
-    --accent-foreground: oklch(0.97 0.003 265);
+    --secondary: #2a2d32;
+    --secondary-foreground: var(--foreground);
+    --muted: #24262a;
+    --muted-foreground: #a9adb7;
+    --accent: #2e3239;
+    --accent-foreground: var(--foreground);
     --destructive: oklch(0.66 0.2 22);
-    --border: oklch(1 0 0 / 8%);
-    --input: oklch(1 0 0 / 11%);
+    --border: #303339;
+    --input: #3b3f46;
     --ring: oklch(0.63 0.2 262 / 60%);
     --success: oklch(0.72 0.16 155);
     --success-foreground: oklch(0.8 0.14 155);
@@ -134,15 +137,37 @@
     --chart-3: oklch(0.8 0.15 80);
     --chart-4: oklch(0.68 0.19 300);
     --chart-5: oklch(0.66 0.2 22);
-    --sidebar: oklch(0.155 0.007 265);
-    --sidebar-foreground: oklch(0.97 0.003 265);
+    --sidebar: #181a1d;
+    --sidebar-foreground: var(--foreground);
     --sidebar-primary: oklch(0.63 0.2 262);
     --sidebar-primary-foreground: oklch(0.99 0 0);
-    --sidebar-accent: oklch(0.24 0.02 262);
-    --sidebar-accent-foreground: oklch(0.97 0.003 265);
-    --sidebar-border: oklch(1 0 0 / 8%);
+    --sidebar-accent: var(--secondary);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
     --sidebar-ring: oklch(0.63 0.2 262 / 60%);
-    --lines: oklch(1 0 0 / 3%);
+    --lines: oklch(1 0 0 / 1%);
+}
+
+/* A deeper surface for inspecting job results, scoped to this dialog. */
+.dark .job-run-details {
+    --popover: #101113;
+    --background: #151619;
+    --card: #1b1c20;
+    --muted: #24262b;
+    --border: #2e3036;
+}
+
+/* A restrained launch fade: navigation stays anchored while the page appears
+   as one surface. No stagger, movement or replay when data arrives. */
+@media (prefers-reduced-motion: no-preference) {
+    .app-opening > main,
+    .app-opening > footer {
+        animation: app-reveal 480ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+}
+@keyframes app-reveal {
+    from { opacity: 0.15; }
+    to { opacity: 1; }
 }
 
 /* Page transitions (View Transitions API). The main area fades out with a small
@@ -181,6 +206,15 @@
 /* Diagonal hairline texture used behind page headers. */
 @utility bg-lines {
     background-image: repeating-linear-gradient(135deg, var(--lines) 0 1px, transparent 1px 11px);
+}
+
+/* Hide scrollbar chrome without disabling wheel, touch or keyboard scrolling. */
+@utility scrollbar-none {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 @layer base {

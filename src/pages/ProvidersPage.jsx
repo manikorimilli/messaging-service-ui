@@ -37,6 +37,7 @@ import { api } from '../api/index.js';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
 import { RefreshButton } from '../components/RefreshButton.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
+import { NumberTicker } from '@/components/ui/number-ticker';
 import { ChannelBadges, EnabledBadge, ProviderDetails } from '../components/ProviderDetails.jsx';
 import { ProviderForm } from '../components/ProviderForm.jsx';
 import { Stat } from '../components/Stat.jsx';
@@ -233,10 +234,10 @@ export function ProvidersPage() {
       </PageHeader>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={ServerIcon} label="Providers" value={providers.length} />
-        <Stat icon={CircleCheckIcon} label="Enabled" value={enabledCount} tone="success" />
-        <Stat icon={LockIcon} label="Built-in" value={builtInCount} />
-        <Stat icon={PlugZapIcon} label="Added via API" value={providers.length - builtInCount} tone="primary" />
+        <Stat icon={ServerIcon} label="Providers" value={<NumberTicker value={providers.length} />} />
+        <Stat icon={CircleCheckIcon} label="Enabled" value={<NumberTicker value={enabledCount} />} tone="success" />
+        <Stat icon={LockIcon} label="Built-in" value={<NumberTicker value={builtInCount} />} />
+        <Stat icon={PlugZapIcon} label="Added via API" value={<NumberTicker value={providers.length - builtInCount} />} tone="primary" />
       </div>
 
       <ErrorAlert error={toggle.error} onDismiss={toggle.reset} />

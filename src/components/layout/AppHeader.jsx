@@ -19,7 +19,7 @@ const FUTURE_CHANNELS = [
   { label: 'WhatsApp', icon: MessageCircleIcon },
 ];
 
-function Logo() {
+export function Logo() {
   return (
     <a href="#/providers" className="flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring">
       <span className="relative flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/25">
@@ -99,7 +99,7 @@ export function AppHeader({ routes, route }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-border/60 border-b bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/55">
+    <header className="sticky top-0 z-40 border-border/60 border-b bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/55 dark:border-border dark:bg-card/85">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 md:px-6">
         <Logo />
 
