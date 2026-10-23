@@ -1,15 +1,20 @@
 import { useState } from 'react';
+import { CircleCheckIcon, MessagesSquareIcon, CircleXIcon, CopyMinusIcon, SendIcon, UsersIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { enter } from '@/lib/motion';
 import { api } from '../api/index.js';
-import { Alert } from '../components/Alert.jsx';
 import { SimulatedBadge } from '../components/Badge.jsx';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
+import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { MessageField } from '../components/MessageField.jsx';
 import { MockHints } from '../components/MockHints.jsx';
+import { Notice } from '../components/Notice.jsx';
 import { ProviderSelect } from '../components/ProviderSelect.jsx';
 import { RecipientResultsTable } from '../components/RecipientResultsTable.jsx';
 import { RecipientsInput } from '../components/RecipientsInput.jsx';
 import { Stat } from '../components/Stat.jsx';
-import { Spinner } from '../components/States.jsx';
+import { EmptyState, LoadingState } from '../components/States.jsx';
+import { StatusBadge } from '../components/StatusBadge.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useProviders } from '../hooks/useProviders.js';
 import { MAX_RECIPIENTS, mergeRecipients, validateBody, validateRecipients } from '../utils/validation.js';
@@ -32,25 +37,29 @@ function BatchResult({ result }) {
   const summary = outcome(result);
 
   return (
-    <section className="card result" aria-live="polite">
-      <header className="result-header">
-        <h2>Batch result</h2>
-        <SimulatedBadge />
-      </header>
-      <Alert tone={summary.tone} title={summary.title}>
-        <p>{summary.text}</p>
-        <p className="hint">Accepted means the provider queued the message. It does not confirm delivery.</p>
-      </Alert>
-
-      <div className="stats">
-        <Stat label="Total" value={result.total} />
-        <Stat label="Accepted" value={result.accepted} tone="success" />
-        <Stat label="Failed" value={result.failed} tone={result.failed ? 'error' : undefined} />
-        <Stat label="Duplicates removed" value={result.duplicatesRemoved} />
+    <section aria-live="polite" className={`space-y-5 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur-sm md:p-6 ${enter}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="flex flex-wrap items-center gap-2 font-semibold text-lg">
+            Batch result <SimulatedBadge />
+          </h2>
+          <p className="flex items-center gap-2 text-muted-foreground text-sm">
+            Sent with
+            <StatusBadge>{result.provider}</StatusBadge>
+          </p>
+        </div>
       </div>
-      <p className="hint">
-        Provider: <code>{result.provider}</code>
-      </p>
+
+      <Notice tone={summary.tone} title={summary.title}>
+        {summary.text} Accepted means the provider queued the message. It does not confirm delivery.
+      </Notice>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat icon={UsersIcon} label="Total" value={result.total} />
+        <Stat icon={CircleCheckIcon} label="Accepted" value={result.accepted} tone="success" />
+        <Stat icon={CircleXIcon} label="Failed" value={result.failed} tone={result.failed ? 'error' : undefined} />
+        <Stat icon={CopyMinusIcon} label="Duplicates removed" value={result.duplicatesRemoved} />
+      </div>
 
       <RecipientResultsTable results={result.results} />
     </section>
@@ -94,77 +103,93 @@ export function BulkSmsPage() {
   }
 
   return (
-    <section className="page">
-      <header className="page-header">
-        <div>
-          <h1>Bulk SMS</h1>
-          <p className="muted">Send one message to up to {MAX_RECIPIENTS} recipients.</p>
-        </div>
-      </header>
+    <>
+      <PageHeader
+        eyebrow="Broadcast"
+        title="Bulk"
+        accent="messaging"
+        description={`Send one message to up to ${MAX_RECIPIENTS} recipients and see the outcome for each number.`}
+      />
 
-      <div className="two-col">
-        <form className="card form" onSubmit={handleSubmit} noValidate>
-          <ProviderSelect
-            id="bulk-provider"
-            value={provider}
-            onChange={setProvider}
-            providers={providersState.providers}
-            loading={providersState.loading}
-            error={providersState.error}
-            disabled={send.pending}
-          />
+      <div className="grid items-start gap-6 lg:grid-cols-5">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="overflow-hidden rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm lg:col-span-3"
+        >
+          <div className="space-y-1 border-b px-6 py-5">
+            <h2 className="font-semibold">Batch message</h2>
+            <p className="text-muted-foreground text-sm">The same message goes to every recipient.</p>
+          </div>
+          <div className="space-y-6 p-6">
+            <ProviderSelect
+              id="bulk-provider"
+              value={provider}
+              onChange={setProvider}
+              providers={providersState.providers}
+              loading={providersState.loading}
+              error={providersState.error}
+              disabled={send.pending}
+            />
 
-          <RecipientsInput
-            id="bulk-recipients"
-            recipients={recipients}
-            onChange={setRecipients}
-            draft={draft}
-            onDraftChange={(value) => {
-              setDraft(value);
-              setDraftError(null);
-            }}
-            error={recipientsError}
-            disabled={send.pending}
-          />
+            <RecipientsInput
+              id="bulk-recipients"
+              recipients={recipients}
+              onChange={setRecipients}
+              draft={draft}
+              onDraftChange={(value) => {
+                setDraft(value);
+                setDraftError(null);
+              }}
+              error={recipientsError}
+              disabled={send.pending}
+            />
 
-          <MessageField
-            id="bulk-body"
-            provider={provider}
-            value={body}
-            onChange={setBody}
-            onBlur={() => setTouched((t) => ({ ...t, body: true }))}
-            error={touched.body ? bodyError : null}
-            disabled={send.pending}
-          />
-
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary" disabled={send.pending}>
+            <MessageField
+              id="bulk-body"
+              provider={provider}
+              value={body}
+              onChange={setBody}
+              onBlur={() => setTouched((t) => ({ ...t, body: true }))}
+              error={touched.body ? bodyError : null}
+              disabled={send.pending}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-3 border-t bg-muted/30 px-6 py-4">
+            <Button type="submit" size="lg" className="w-full rounded-full px-6 shadow-lg shadow-primary/25 sm:w-auto" disabled={send.pending}>
               {send.pending ? (
-                <>
-                  <Spinner small /> Sending...
-                </>
-              ) : recipients.length > 0 ? (
-                `Send to ${recipients.length} recipient${recipients.length === 1 ? '' : 's'}`
+                <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
               ) : (
-                'Send bulk SMS'
+                <SendIcon aria-hidden="true" />
               )}
-            </button>
+              {send.pending
+                ? 'Sending...'
+                : recipients.length > 0
+                  ? `Send to ${recipients.length} recipient${recipients.length === 1 ? '' : 's'}`
+                  : 'Send bulk SMS'}
+            </Button>
           </div>
         </form>
 
-        <div className="stack">
+        <aside className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <ErrorAlert error={send.error} onDismiss={send.reset} />
-          {!send.data && !send.error && (
-            <div className="card placeholder">
-              <p className="muted">Per-recipient results will appear here after you send.</p>
+          {send.pending && (
+            <div className="rounded-2xl border bg-card/80">
+              <LoadingState label="Sending batch..." />
+            </div>
+          )}
+          {!send.data && !send.error && !send.pending && (
+            <div className="rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm">
+              <EmptyState icon={MessagesSquareIcon} title="No batch sent yet">
+                Per-recipient results appear below after you send.
+              </EmptyState>
             </div>
           )}
           <MockHints />
-        </div>
+        </aside>
       </div>
 
       {send.data && <BatchResult result={send.data} />}
-
-    </section>
+    </>
   );
 }

@@ -10,7 +10,15 @@ A small React frontend for the multi-provider notification service. It covers:
 
 The backend supports SMS only. Email, Call and WhatsApp appear in the navigation as "soon" and do nothing yet.
 
-Built with React 19, Vite and plain CSS. No router, state library or UI kit.
+Built with React 19, Vite, Tailwind CSS v4 and [shadcn/ui](https://ui.shadcn.com) components (Radix).
+The sun/moon button in the top bar switches between light and dark in one click. Until it is first used the
+app follows the system setting; after that the choice is remembered in the browser. Font: Inter throughout (Geist Mono only in the JSON configuration editor and viewer).
+
+The shadcn components live in `src/components/ui/` and were added with the CLI as JavaScript
+(`npx shadcn@latest add <name>`). Only the components the app uses are kept. Theme colours, fonts and the
+short fade used for page sections are in `src/index.css` and `src/lib/motion.js`; animations switch off when
+the system asks for reduced motion. Switching pages cross-fades the content and slides the active tab highlight
+(View Transitions API); browsers without it switch instantly.
 
 ## Setup
 
@@ -22,7 +30,7 @@ npm run dev
 ```
 
 Open the URL Vite prints (usually http://localhost:5173). The app starts in **mock mode**: providers and send
-results are simulated in the browser, and every simulated result carries a purple "Simulated" badge.
+results are simulated in the browser, and every simulated result carries a "Simulated" badge.
 
 Other scripts:
 
@@ -61,7 +69,7 @@ The proxy exists only in `npm run dev`. For a production build, set `VITE_API_BA
 before `npm run build`, and either enable CORS on the backend for the frontend's origin or serve both from
 the same origin behind a reverse proxy.
 
-The header shows which mode is active ("Mock API" or "Live: ...").
+The top bar shows which mode is active ("Mock mode" or a green "Live" pill).
 
 Backend API docs: `{baseURL}/swagger-ui.html` and `{baseURL}/v3/api-docs`.
 
@@ -110,7 +118,10 @@ src/
     ApiError.js             error type shown by the UI
     mockApi.js, mockData.js in-memory backend for development and tests
   pages/                    ProvidersPage, SendSmsPage, BulkSmsPage, ScheduledJobsPage
-  components/               reusable UI: alerts, modal, confirm dialog, provider select, JSON form...
+  components/               app components: status badge, error alert, form fields, SMS preview, JSON form...
+  components/layout/        top bar, page header, background
+  components/ui/            shadcn/ui components (generated, see above)
+  lib/                      cn() helper and shared motion classes
   hooks/                    useProviders, useAsyncAction (blocks duplicate submits)
   utils/                    validation rules, provider config helpers, error explanations
   data/                     frontend-only sample templates
@@ -135,7 +146,8 @@ src/
   With Twilio or the primary provider selected, the list shows the Twilio test values (`sms_2fa`,
   `sms_appointment_reminders`, ...), which are the only bodies Twilio accepts. Vonage and other providers get
   free-text samples. Both lists live in `src/data/sampleTemplates.js`.
-- **Scheduled jobs** lists runs of the backend's scheduled job, newest first, and refreshes every 30 seconds
+- **Scheduled jobs** lists runs of the backend's scheduled job, newest first, 5 per page by default (the backend
+  returns every run, so pages are cut in the browser), and refreshes every 30 seconds
   while the toggle is on. **Details** opens one run with each provider's per-recipient results. The page is
   read-only: the backend owns the schedule and its targets file, and the API has no way to start or change a
   job. Job-run responses use kebab-case keys (`run-id`, `provider-error-code`); the API layer converts them to

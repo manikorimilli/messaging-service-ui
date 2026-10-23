@@ -1,5 +1,10 @@
 import { useState } from 'react';
+import { PlusIcon, XIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { MAX_RECIPIENTS, mergeRecipients } from '../utils/validation.js';
+import { FormField } from './FormField.jsx';
 
 const SEPARATOR = /[\s,;]/;
 // Keeps the cursor in the number box after pressing Add or a chip's remove button.
@@ -52,68 +57,88 @@ export function RecipientsInput({ id, recipients, onChange, draft, onDraftChange
   }
 
   return (
-    <div className="field">
-      <div className="field-row">
-        <label htmlFor={id}>Recipients</label>
-        <span className="hint chip-count">
+    <FormField
+      id={id}
+      label="Recipients"
+      error={error}
+      description="Press Enter after each number. You can also paste a list separated by commas or new lines."
+      aside={
+        <span className="flex items-center gap-2 text-muted-foreground text-xs tabular-nums">
           {recipients.length} / {MAX_RECIPIENTS}
           {recipients.length > 0 && !disabled && (
-            <button type="button" className="link-button" onClick={() => onChange([])}>
+            <Button variant="ghost" size="xs" className="rounded-full" onClick={() => onChange([])}>
               Clear all
-            </button>
+            </Button>
           )}
         </span>
-      </div>
-
-      <div className={`chip-box${error ? ' chip-box-invalid' : ''}${disabled ? ' chip-box-disabled' : ''}`}>
+      }
+    >
+      <div
+        className={cn(
+          'flex flex-col gap-2.5 rounded-xl border border-input bg-background/60 p-2.5 shadow-xs transition-shadow focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/40 dark:bg-input/20',
+          error && 'border-destructive focus-within:ring-destructive/20',
+          disabled && 'opacity-60',
+        )}
+      >
         {recipients.length > 0 ? (
-          <ul className="chip-list" aria-label="Added recipients">
+          <ul className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto" aria-label="Added recipients">
             {recipients.map((number) => (
-              <li key={number} className="chip">
+              <li
+                key={number}
+                className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/8 py-0.5 ps-2.5 pe-0.5 tabular-nums text-foreground text-xs animate-in fade-in zoom-in-95 duration-200 motion-reduce:animate-none"
+              >
                 <span>{number}</span>
-                <button
-                  type="button"
-                  className="chip-remove"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="rounded-full hover:bg-destructive/15 hover:text-destructive"
                   onMouseDown={keepFocus}
                   onClick={() => remove(number)}
                   disabled={disabled}
                   aria-label={`Remove ${number}`}
-                  title="Remove"
                 >
-                  ×
-                </button>
+                  <XIcon aria-hidden="true" />
+                </Button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="chip-empty">No numbers added yet.</p>
+          <p className="px-1 text-muted-foreground text-xs">No numbers added yet.</p>
         )}
 
-        <div className="chip-entry">
-          <input
+        <div className="flex items-center gap-2">
+          <Input
             id={id}
             type="tel"
             inputMode="tel"
             autoComplete="off"
+            className="h-8 flex-1 border-0 bg-transparent px-1 tabular-nums shadow-none focus-visible:ring-0 dark:bg-transparent"
             placeholder="+919876543210, then press Enter"
             value={draft}
             onChange={(e) => handleDraft(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={disabled || recipients.length >= MAX_RECIPIENTS}
-            aria-invalid={Boolean(error)}
-            aria-describedby={`${id}-hint`}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={error ? `${id}-error` : `${id}-description`}
           />
-          <button type="button" className="btn btn-sm" onMouseDown={keepFocus} onClick={() => commit(draft)} disabled={disabled || !draft.trim()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            onMouseDown={keepFocus}
+            onClick={() => commit(draft)}
+            disabled={disabled || !draft.trim()}
+          >
+            <PlusIcon aria-hidden="true" />
             Add
-          </button>
+          </Button>
         </div>
       </div>
-
-      <p id={`${id}-hint`} className="hint">
-        Press Enter after each number. You can also paste a list separated by commas or new lines.
-      </p>
-      {notice && <p className="field-warning" role="status">{notice}</p>}
-      {error && <p className="field-error">{error}</p>}
-    </div>
+      {notice && (
+        <p className="text-warning-foreground text-xs" role="status">
+          {notice}
+        </p>
+      )}
+    </FormField>
   );
 }
