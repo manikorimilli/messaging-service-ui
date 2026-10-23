@@ -1,6 +1,10 @@
+import { CircleCheckIcon, CircleXIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ERROR_HELP } from '../utils/errors.js';
-import { Badge } from './Badge.jsx';
 import { EmptyState } from './States.jsx';
+
+const none = <span className="text-muted-foreground">none</span>;
 
 // Per-recipient outcome table, shared by bulk sends and scheduled job runs.
 // Expects camelCase fields: to, status, providerMessageId, providerStatus,
@@ -11,49 +15,63 @@ export function RecipientResultsTable({ results }) {
   }
 
   return (
-    <div className="table-card">
-      <table className="table responsive-table">
-        <thead>
-          <tr>
-            <th>Recipient</th>
-            <th>Status</th>
-            <th>Message ID</th>
-            <th>Provider status</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="overflow-hidden rounded-xl border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Recipient</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Message ID</TableHead>
+            <TableHead>Provider status</TableHead>
+            <TableHead className="min-w-64">Error</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {results.map((r, i) => {
             const failed = r.status !== 'ACCEPTED';
             return (
-              <tr key={`${r.to}-${i}`} className={failed ? 'row-failed' : undefined}>
-                <td data-label="Recipient">
-                  <code>{r.to}</code>
-                </td>
-                <td data-label="Status">
-                  {failed ? <Badge tone="error">{r.status || 'FAILED'}</Badge> : <Badge tone="success">Accepted</Badge>}
-                </td>
-                <td data-label="Message ID">
-                  {r.providerMessageId ? <code className="break">{r.providerMessageId}</code> : <span className="muted">none</span>}
-                </td>
-                <td data-label="Provider status">{r.providerStatus ?? <span className="muted">none</span>}</td>
-                <td data-label="Error">
+              <TableRow key={`${r.to}-${i}`} className={failed ? 'bg-destructive/4' : undefined}>
+                <TableCell className="font-mono">{r.to}</TableCell>
+                <TableCell>
                   {failed ? (
-                    <div className="error-cell">
-                      {r.code && <code>{r.code}</code>}
-                      {r.providerErrorCode && <span>Provider code {r.providerErrorCode}</span>}
-                      {r.detail && <span>{r.detail}</span>}
-                      {r.code && ERROR_HELP[r.code] && <span className="hint">{ERROR_HELP[r.code]}</span>}
+                    <Badge variant="error">
+                      <CircleXIcon aria-hidden="true" />
+                      {r.status || 'FAILED'}
+                    </Badge>
+                  ) : (
+                    <Badge variant="success">
+                      <CircleCheckIcon aria-hidden="true" />
+                      Accepted
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="max-w-56 truncate font-mono text-xs" title={r.providerMessageId || undefined}>
+                  {r.providerMessageId || none}
+                </TableCell>
+                <TableCell className="font-mono text-xs">{r.providerStatus ?? none}</TableCell>
+                <TableCell className="whitespace-normal">
+                  {failed ? (
+                    <div className="flex flex-col gap-1 text-xs">
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        {r.code && <code className="font-mono font-medium text-destructive-foreground">{r.code}</code>}
+                        {r.providerErrorCode && (
+                          <Badge variant="outline" size="sm" className="font-mono">
+                            {r.providerErrorCode}
+                          </Badge>
+                        )}
+                      </span>
+                      {r.detail && <span className="text-foreground">{r.detail}</span>}
+                      {r.code && ERROR_HELP[r.code] && <span className="text-muted-foreground">{ERROR_HELP[r.code]}</span>}
                     </div>
                   ) : (
-                    <span className="muted">none</span>
+                    none
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

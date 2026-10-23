@@ -10,7 +10,12 @@ A small React frontend for the multi-provider notification service. It covers:
 
 The backend supports SMS only. Email, Call and WhatsApp appear in the navigation as "soon" and do nothing yet.
 
-Built with React 19, Vite and plain CSS. No router, state library or UI kit.
+Built with React 19, Vite, Tailwind CSS v4 and [coss ui](https://coss.com/ui) components (on Base UI).
+It follows the system light or dark setting, and the navigation becomes a slide-in menu on phones.
+
+The coss components live in `src/components/ui/` and were added with the shadcn CLI, converted to JavaScript.
+Add another one with `npx shadcn@latest add @coss/<name>`. Only the components the app uses are kept.
+One local change: `sidebar.jsx` guards `cookieStore`, which Firefox does not support.
 
 ## Setup
 
@@ -22,7 +27,7 @@ npm run dev
 ```
 
 Open the URL Vite prints (usually http://localhost:5173). The app starts in **mock mode**: providers and send
-results are simulated in the browser, and every simulated result carries a purple "Simulated" badge.
+results are simulated in the browser, and every simulated result carries a "Simulated" badge.
 
 Other scripts:
 
@@ -61,7 +66,7 @@ The proxy exists only in `npm run dev`. For a production build, set `VITE_API_BA
 before `npm run build`, and either enable CORS on the backend for the frontend's origin or serve both from
 the same origin behind a reverse proxy.
 
-The header shows which mode is active ("Mock API" or "Live: ...").
+The sidebar footer shows which mode is active ("Mock API" or "Live" with the base URL).
 
 Backend API docs: `{baseURL}/swagger-ui.html` and `{baseURL}/v3/api-docs`.
 
@@ -110,7 +115,9 @@ src/
     ApiError.js             error type shown by the UI
     mockApi.js, mockData.js in-memory backend for development and tests
   pages/                    ProvidersPage, SendSmsPage, BulkSmsPage, ScheduledJobsPage
-  components/               reusable UI: alerts, modal, confirm dialog, provider select, JSON form...
+  components/               app components: error alert, page header, provider select, JSON form...
+  components/ui/            coss ui components (generated, see above)
+  lib/utils.js              cn() class-name helper used by the coss components
   hooks/                    useProviders, useAsyncAction (blocks duplicate submits)
   utils/                    validation rules, provider config helpers, error explanations
   data/                     frontend-only sample templates

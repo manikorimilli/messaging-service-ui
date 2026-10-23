@@ -1,28 +1,46 @@
-import { useState } from 'react';
-import { Alert } from '../components/Alert.jsx';
-import { Badge, SimulatedBadge } from '../components/Badge.jsx';
+import { useId, useState } from 'react';
+import { CalendarClockIcon, ChevronRightIcon, InfoIcon, RefreshCwIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { SimulatedBadge } from '../components/Badge.jsx';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
-import { Modal } from '../components/Modal.jsx';
+import { PageHeader } from '../components/PageHeader.jsx';
 import { RecipientResultsTable } from '../components/RecipientResultsTable.jsx';
 import { Stat } from '../components/Stat.jsx';
-import { EmptyState, LoadingState, Spinner } from '../components/States.jsx';
+import { EmptyState, LoadingState, TableSkeleton } from '../components/States.jsx';
 import { useJobRun, useJobRuns } from '../hooks/useJobRuns.js';
 import { formatDateTime, formatDuration, outcomeTone, statusTone } from '../utils/format.js';
 
 const REFRESH_MS = 30000;
+// statusTone/outcomeTone names mapped to coss Badge variants.
+const BADGE_VARIANT = { success: 'success', warning: 'warning', error: 'error', info: 'info', neutral: 'secondary' };
 
 function StatusBadge({ status }) {
-  return <Badge tone={statusTone(status)}>{status || 'UNKNOWN'}</Badge>;
+  return <Badge variant={BADGE_VARIANT[statusTone(status)]}>{status || 'UNKNOWN'}</Badge>;
 }
 
 function GroupChips({ groups }) {
-  if (!Array.isArray(groups) || groups.length === 0) return <span className="muted">none</span>;
+  if (!Array.isArray(groups) || groups.length === 0) return <span className="text-muted-foreground">none</span>;
   return (
-    <div className="group-chips">
+    <div className="flex flex-wrap gap-1">
       {groups.map((g) => (
         <Badge
           key={g.provider}
-          tone={outcomeTone(g)}
+          variant={BADGE_VARIANT[outcomeTone(g)]}
+          className="font-mono"
           title={`${g.provider}: ${g.accepted} of ${g.total} accepted, ${g.failed} failed (${g.status})`}
         >
           {g.provider} {g.accepted}/{g.total}
@@ -32,106 +50,115 @@ function GroupChips({ groups }) {
   );
 }
 
-function JobRunModal({ runId, onClose }) {
+function Detail({ label, children, title }) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <dt className="text-muted-foreground text-xs font-medium">{label}</dt>
+      <dd className="truncate text-sm" title={title}>
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+function JobRunDialog({ runId, onClose }) {
   const { run, loading, error } = useJobRun(runId);
 
   return (
-    <Modal title="Job run details" onClose={onClose} wide>
-      {loading && <LoadingState label="Loading run..." />}
-      <ErrorAlert error={error} />
-      {run && (
-        <div className="stack">
-          <dl className="details">
-            <div>
-              <dt>Run ID</dt>
-              <dd>
-                <code className="break">{run.runId}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Status</dt>
-              <dd>
-                <StatusBadge status={run.status} /> <SimulatedBadge />
-              </dd>
-            </div>
-            <div>
-              <dt>Started</dt>
-              <dd title={run.startedAt}>{formatDateTime(run.startedAt)}</dd>
-            </div>
-            <div>
-              <dt>Duration</dt>
-              <dd>{formatDuration(run.startedAt, run.finishedAt) ?? 'Still running'}</dd>
-            </div>
-            <div>
-              <dt>Targets version</dt>
-              <dd>
-                <code>{run.targetsVersion || 'unknown'}</code>
-              </dd>
-            </div>
-          </dl>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogPopup className="sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            Job run details {run && <StatusBadge status={run.status} />} <SimulatedBadge />
+          </DialogTitle>
+          <DialogDescription>Per-recipient results for each provider in this run.</DialogDescription>
+        </DialogHeader>
+        <DialogPanel className="space-y-5">
+          {loading && <LoadingState label="Loading run..." />}
+          <ErrorAlert error={error} />
+          {run && (
+            <>
+              <dl className="grid grid-cols-2 gap-4 rounded-xl border bg-muted/40 p-4 md:grid-cols-4">
+                <div className="col-span-2 md:col-span-4">
+                  <Detail label="Run ID" title={run.runId}>
+                    <code className="font-mono text-xs">{run.runId}</code>
+                  </Detail>
+                </div>
+                <Detail label="Started" title={run.startedAt}>
+                  {formatDateTime(run.startedAt)}
+                </Detail>
+                <Detail label="Duration">{formatDuration(run.startedAt, run.finishedAt) ?? 'Still running'}</Detail>
+                <Detail label="Targets version">
+                  <code className="font-mono">{run.targetsVersion || 'unknown'}</code>
+                </Detail>
+                <Detail label="Providers">{(run.groups || []).length}</Detail>
+              </dl>
 
-          <div className="stats stats-3">
-            <Stat label="Total" value={run.total} />
-            <Stat label="Accepted" value={run.accepted} tone="success" />
-            <Stat label="Failed" value={run.failed} tone={run.failed ? 'error' : undefined} />
-          </div>
-          <p className="hint">Accepted means the provider queued the message. It does not confirm delivery.</p>
+              <div className="grid grid-cols-3 gap-3">
+                <Stat label="Total" value={run.total} />
+                <Stat label="Accepted" value={run.accepted} tone="success" />
+                <Stat label="Failed" value={run.failed} tone={run.failed ? 'error' : undefined} />
+              </div>
+              <p className="text-muted-foreground text-xs">
+                Accepted means the provider queued the message. It does not confirm delivery.
+              </p>
 
-          {(run.groups || []).map((g) => (
-            <section key={g.provider} className="run-group">
-              <header className="result-header">
-                <h3>
-                  <code>{g.provider}</code>
-                </h3>
-                <StatusBadge status={g.status} />
-                <span className="muted">
-                  {g.accepted} of {g.total} accepted · {g.failed} failed
-                  {g.duplicatesRemoved ? ` · ${g.duplicatesRemoved} duplicates removed` : ''}
-                </span>
-              </header>
-              <RecipientResultsTable results={g.results} />
-            </section>
-          ))}
-          {(!run.groups || run.groups.length === 0) && <EmptyState title="This run has no provider groups" />}
-        </div>
-      )}
-    </Modal>
+              {(run.groups || []).map((g) => (
+                <section key={g.provider} className="space-y-3">
+                  <header className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-mono font-semibold text-sm">{g.provider}</h3>
+                    <StatusBadge status={g.status} />
+                    <span className="text-muted-foreground text-xs">
+                      {g.accepted} of {g.total} accepted · {g.failed} failed
+                      {g.duplicatesRemoved ? ` · ${g.duplicatesRemoved} duplicates removed` : ''}
+                    </span>
+                  </header>
+                  <RecipientResultsTable results={g.results} />
+                </section>
+              ))}
+              {(!run.groups || run.groups.length === 0) && <EmptyState title="This run has no provider groups" />}
+            </>
+          )}
+        </DialogPanel>
+      </DialogPopup>
+    </Dialog>
   );
 }
 
 export function ScheduledJobsPage() {
+  const switchId = useId();
   const [autoRefresh, setAutoRefresh] = useState(true);
   const { runs, loading, error, loadedAt, reload } = useJobRuns({ refreshMs: autoRefresh ? REFRESH_MS : null });
   const [openRunId, setOpenRunId] = useState(null);
   const latest = runs[0];
 
   return (
-    <section className="page">
-      <header className="page-header">
-        <div>
-          <h1>Scheduled jobs</h1>
-          <p className="muted">Runs of the backend's scheduled SMS job, newest first.</p>
-        </div>
-        <div className="toolbar toolbar-center">
-          <label className="checkbox">
-            <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
+    <section className="flex flex-col gap-6">
+      <PageHeader title="Scheduled jobs" description="Runs of the backend's scheduled SMS job, newest first.">
+        <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5">
+          <Switch id={switchId} checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+          <Label htmlFor={switchId} className="font-normal text-sm">
             Auto-refresh every {REFRESH_MS / 1000} s
-          </label>
-          <button type="button" className="btn" onClick={reload} disabled={loading}>
-            {loading && <Spinner small />} Refresh
-          </button>
+          </Label>
         </div>
-      </header>
+        <Button variant="outline" onClick={reload} disabled={loading}>
+          <RefreshCwIcon className={loading ? 'animate-spin' : undefined} aria-hidden="true" />
+          Refresh
+        </Button>
+      </PageHeader>
 
-      <Alert tone="info">
-        The backend runs this job on its own schedule and sends to the recipients in its targets file, which an
-        independent system keeps up to date. This page only shows the results; it cannot start, change or stop a job.
+      <Alert variant="info" role="note">
+        <InfoIcon aria-hidden="true" />
+        <AlertDescription>
+          The backend runs this job on its own schedule and sends to the recipients in its targets file, which an
+          independent system keeps up to date. This page only shows the results; it cannot start, change or stop a job.
+        </AlertDescription>
       </Alert>
 
       <ErrorAlert error={error} />
 
       {latest && (
-        <div className="stats">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat label="Last run" value={formatDateTime(latest.startedAt)} size="sm" />
           <Stat label="Last run status" value={<StatusBadge status={latest.status} />} size="sm" />
           <Stat label="Accepted (last run)" value={`${latest.accepted} / ${latest.total}`} tone="success" />
@@ -139,66 +166,70 @@ export function ScheduledJobsPage() {
         </div>
       )}
 
-      {loading && runs.length === 0 && <LoadingState label="Loading job runs..." />}
-      {!loading && !error && runs.length === 0 && (
-        <EmptyState title="No job runs yet">Runs appear here after the backend scheduler has run the job.</EmptyState>
-      )}
-
-      {runs.length > 0 && (
-        <div className="card table-card">
-          <table className="table responsive-table">
-            <thead>
-              <tr>
-                <th>Started</th>
-                <th>Status</th>
-                <th>Recipients</th>
-                <th>Providers</th>
-                <th>Targets version</th>
-                <th>Duration</th>
-                <th className="actions-col">
+      <Card className="overflow-hidden p-0">
+        {loading && runs.length === 0 && <TableSkeleton label="Loading job runs..." />}
+        {!loading && !error && runs.length === 0 && (
+          <EmptyState icon={CalendarClockIcon} title="No job runs yet">
+            Runs appear here after the backend scheduler has run the job.
+          </EmptyState>
+        )}
+        {runs.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="ps-4">Started</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead className="hidden sm:table-cell">Providers</TableHead>
+                <TableHead className="hidden md:table-cell">Targets version</TableHead>
+                <TableHead className="hidden md:table-cell">Duration</TableHead>
+                <TableHead className="pe-4 text-right">
                   <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {runs.map((run) => (
-                <tr key={run.runId}>
-                  <td data-label="Started" title={run.startedAt}>
+                <TableRow key={run.runId}>
+                  <TableCell className="whitespace-normal ps-4" title={run.startedAt}>
                     {formatDateTime(run.startedAt)}
-                  </td>
-                  <td data-label="Status">
+                  </TableCell>
+                  <TableCell>
                     <StatusBadge status={run.status} />
-                  </td>
-                  <td data-label="Recipients">
-                    {run.accepted} of {run.total} accepted
-                    {run.failed > 0 && <span className="text-error"> · {run.failed} failed</span>}
-                  </td>
-                  <td data-label="Providers">
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
+                    <span className="tabular-nums">
+                      {run.accepted} of {run.total} accepted
+                    </span>
+                    {run.failed > 0 && <span className="text-destructive-foreground"> · {run.failed} failed</span>}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <GroupChips groups={run.groups} />
-                  </td>
-                  <td data-label="Targets version">
-                    <code>{run.targetsVersion || 'unknown'}</code>
-                  </td>
-                  <td data-label="Duration">{formatDuration(run.startedAt, run.finishedAt) ?? 'Running'}</td>
-                  <td data-label="Actions" className="actions-col">
-                    <button type="button" className="btn btn-sm" onClick={() => setOpenRunId(run.runId)}>
-                      Details
-                    </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <code className="font-mono text-xs">{run.targetsVersion || 'unknown'}</code>
+                  </TableCell>
+                  <TableCell className="hidden tabular-nums md:table-cell">{formatDuration(run.startedAt, run.finishedAt) ?? 'Running'}</TableCell>
+                  <TableCell className="pe-4 text-right">
+                    <Button variant="ghost" size="sm" onClick={() => setOpenRunId(run.runId)} aria-label="Run details">
+                      <span className="max-sm:sr-only">Details</span>
+                      <ChevronRightIcon aria-hidden="true" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
 
       {loadedAt && (
-        <p className="hint">
+        <p className="flex items-center gap-2 text-muted-foreground text-xs" role="status">
           Updated {loadedAt.toLocaleTimeString()} <SimulatedBadge />
         </p>
       )}
 
-      {openRunId && <JobRunModal runId={openRunId} onClose={() => setOpenRunId(null)} />}
+      {openRunId && <JobRunDialog runId={openRunId} onClose={() => setOpenRunId(null)} />}
     </section>
   );
 }

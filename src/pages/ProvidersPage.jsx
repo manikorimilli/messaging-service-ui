@@ -1,34 +1,94 @@
 import { useState } from 'react';
+import {
+  EllipsisIcon,
+  EyeIcon,
+  LockIcon,
+  PencilIcon,
+  PlusIcon,
+  PowerIcon,
+  PowerOffIcon,
+  RefreshCwIcon,
+  ServerIcon,
+  Trash2Icon,
+} from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogDescription,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from '@/components/ui/menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toastManager } from '@/components/ui/toast';
 import { api } from '../api/index.js';
-import { Alert } from '../components/Alert.jsx';
-import { SimulatedBadge } from '../components/Badge.jsx';
-import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
-import { Modal } from '../components/Modal.jsx';
-import { EnabledBadge, ProviderDetails, SourceBadge } from '../components/ProviderDetails.jsx';
+import { PageHeader } from '../components/PageHeader.jsx';
+import { ChannelBadges, EnabledBadge, ProviderDetails, SourceBadge } from '../components/ProviderDetails.jsx';
 import { ProviderForm } from '../components/ProviderForm.jsx';
-import { EmptyState, LoadingState, Spinner } from '../components/States.jsx';
+import { EmptyState, LoadingState, TableSkeleton } from '../components/States.jsx';
+import { config } from '../config.js';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useProvider, useProviders } from '../hooks/useProviders.js';
 import { isReadOnly, toWritePayload } from '../utils/providerConfig.js';
 
-function ViewProviderModal({ id, onClose }) {
-  const { provider, loading, error } = useProvider(id);
+function notify(title) {
+  toastManager.add({
+    title,
+    description: config.useMockApi ? 'Simulated by the mock API.' : undefined,
+    type: 'success',
+  });
+}
+
+function ProviderDialog({ title, description, onClose, children }) {
   return (
-    <Modal title={`Provider ${id}`} onClose={onClose} wide>
-      {loading && <LoadingState label="Loading provider..." />}
-      <ErrorAlert error={error} />
-      {provider && <ProviderDetails provider={provider} />}
-    </Modal>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogPopup className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
+        </DialogHeader>
+        {children}
+      </DialogPopup>
+    </Dialog>
   );
 }
 
-function EditProviderModal({ id, onClose, onSaved }) {
+function ViewProviderDialog({ id, onClose }) {
   const { provider, loading, error } = useProvider(id);
   return (
-    <Modal title={`Edit ${id}`} onClose={onClose} wide>
-      {loading && <LoadingState label="Loading provider..." />}
-      <ErrorAlert error={error} />
+    <ProviderDialog title={`Provider ${id}`} description="Full configuration as returned by the server." onClose={onClose}>
+      <DialogPanel>
+        {loading && <LoadingState label="Loading provider..." />}
+        <ErrorAlert error={error} />
+        {provider && <ProviderDetails provider={provider} />}
+      </DialogPanel>
+    </ProviderDialog>
+  );
+}
+
+function EditProviderDialog({ id, onClose, onSaved }) {
+  const { provider, loading, error } = useProvider(id);
+  return (
+    <ProviderDialog title={`Edit ${id}`} description="Updates replace the full configuration." onClose={onClose}>
+      {(loading || error) && (
+        <DialogPanel>
+          {loading && <LoadingState label="Loading provider..." />}
+          <ErrorAlert error={error} />
+        </DialogPanel>
+      )}
       {provider && (
         <ProviderForm
           mode="update"
@@ -38,26 +98,67 @@ function EditProviderModal({ id, onClose, onSaved }) {
           onCancel={onClose}
         />
       )}
-    </Modal>
+    </ProviderDialog>
   );
 }
 
-function RegisterProviderModal({ onClose, onSaved }) {
+function RegisterProviderDialog({ onClose, onSaved }) {
   return (
-    <Modal title="Register provider" onClose={onClose} wide>
+    <ProviderDialog title="Register provider" description="Add an SMS provider from a JSON configuration." onClose={onClose}>
       <ProviderForm
         mode="create"
         onSubmit={async (cfg) => onSaved(await api.registerProvider(cfg), 'registered')}
         onCancel={onClose}
       />
-    </Modal>
+    </ProviderDialog>
+  );
+}
+
+function RowActions({ provider, locked, busy, onView, onEdit, onToggle, onDelete }) {
+  if (isReadOnly(provider)) {
+    return (
+      <Button variant="ghost" size="sm" onClick={onView} aria-label={`View ${provider.id}`}>
+        <EyeIcon aria-hidden="true" />
+        <span className="max-sm:sr-only">View</span>
+      </Button>
+    );
+  }
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Button variant="ghost" size="sm" onClick={onView} aria-label={`View ${provider.id}`}>
+        <EyeIcon aria-hidden="true" />
+        <span className="max-sm:sr-only">View</span>
+      </Button>
+      <Menu>
+        <MenuTrigger
+          render={<Button variant="ghost" size="icon-sm" loading={busy} aria-label={`More actions for ${provider.id}`} />}
+          disabled={locked}
+        >
+          <EllipsisIcon aria-hidden="true" />
+        </MenuTrigger>
+        <MenuPopup align="end">
+          <MenuItem onClick={onEdit}>
+            <PencilIcon aria-hidden="true" />
+            Edit
+          </MenuItem>
+          <MenuItem onClick={onToggle}>
+            {provider.enabled ? <PowerOffIcon aria-hidden="true" /> : <PowerIcon aria-hidden="true" />}
+            {provider.enabled ? 'Disable' : 'Enable'}
+          </MenuItem>
+          <MenuSeparator />
+          <MenuItem variant="destructive" onClick={onDelete}>
+            <Trash2Icon aria-hidden="true" />
+            Unregister
+          </MenuItem>
+        </MenuPopup>
+      </Menu>
+    </div>
   );
 }
 
 export function ProvidersPage() {
   const { providers, loading, error, reload } = useProviders();
   const [dialog, setDialog] = useState(null); // { type: 'view' | 'edit' | 'register' | 'delete', provider? }
-  const [notice, setNotice] = useState(null);
   const toggle = useAsyncAction((id, enabled) => api.setProviderEnabled(id, enabled));
   const remove = useAsyncAction((id) => api.deleteProvider(id));
   const [busyId, setBusyId] = useState(null);
@@ -69,17 +170,16 @@ export function ProvidersPage() {
 
   function handleSaved(saved, verb) {
     setDialog(null);
-    setNotice(`Provider ${saved.id} ${verb}.`);
+    notify(`Provider ${saved.id} ${verb}`);
     reload();
   }
 
   async function handleToggle(provider) {
-    setNotice(null);
     setBusyId(provider.id);
     const result = await toggle.run(provider.id, !provider.enabled);
     setBusyId(null);
     if (result.ok) {
-      setNotice(`Provider ${result.data.id} is now ${result.data.enabled ? 'enabled' : 'disabled'}.`);
+      notify(`Provider ${result.data.id} is now ${result.data.enabled ? 'enabled' : 'disabled'}`);
       reload();
     }
   }
@@ -89,7 +189,7 @@ export function ProvidersPage() {
     const result = await remove.run(id);
     if (result.ok) {
       closeDialog();
-      setNotice(`Provider ${id} unregistered.`);
+      notify(`Provider ${id} unregistered`);
       reload();
     }
   }
@@ -97,137 +197,121 @@ export function ProvidersPage() {
   const actionsLocked = toggle.pending || remove.pending;
 
   return (
-    <section className="page">
-      <header className="page-header">
-        <div>
-          <h1>Providers</h1>
-          <p className="muted">SMS providers known to the messaging service.</p>
-        </div>
-        <div className="toolbar">
-          <button type="button" className="btn" onClick={reload} disabled={loading}>
-            {loading && <Spinner small />} Refresh
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => {
-              setNotice(null);
-              setDialog({ type: 'register' });
-            }}
-          >
-            Register provider
-          </button>
-        </div>
-      </header>
+    <section className="flex flex-col gap-6">
+      <PageHeader title="Providers" description="SMS providers known to the messaging service.">
+        <Button variant="outline" onClick={reload} disabled={loading}>
+          <RefreshCwIcon className={loading ? 'animate-spin' : undefined} aria-hidden="true" />
+          Refresh
+        </Button>
+        <Button onClick={() => setDialog({ type: 'register' })}>
+          <PlusIcon aria-hidden="true" />
+          Register provider
+        </Button>
+      </PageHeader>
 
-      {notice && (
-        <Alert tone="success" onDismiss={() => setNotice(null)}>
-          {notice} <SimulatedBadge />
-        </Alert>
-      )}
       <ErrorAlert error={toggle.error} onDismiss={toggle.reset} />
       <ErrorAlert error={error} />
 
-      {loading && providers.length === 0 && <LoadingState label="Loading providers..." />}
-      {!loading && !error && providers.length === 0 && (
-        <EmptyState title="No providers yet">Register a provider to start sending.</EmptyState>
-      )}
-
-      {providers.length > 0 && (
-        <div className="card table-card">
-          <table className="table responsive-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Display name</th>
-                <th>Channels</th>
-                <th>Status</th>
-                <th>Source</th>
-                <th className="actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {providers.map((p) => {
-                const readOnly = isReadOnly(p);
-                const busy = busyId === p.id;
-                return (
-                  <tr key={p.id}>
-                    <td data-label="ID">
-                      <code>{p.id}</code>
-                    </td>
-                    <td data-label="Display name">{p['display-name']}</td>
-                    <td data-label="Channels">{(p.channels || []).join(', ')}</td>
-                    <td data-label="Status">
-                      <EnabledBadge enabled={p.enabled} />
-                    </td>
-                    <td data-label="Source">
-                      <SourceBadge provider={p} />
-                    </td>
-                    <td data-label="Actions" className="actions-col">
-                      <div className="row-actions">
-                        <button type="button" className="btn btn-sm" onClick={() => setDialog({ type: 'view', provider: p })}>
-                          View
-                        </button>
-                        {!readOnly && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-sm"
-                              onClick={() => setDialog({ type: 'edit', provider: p })}
-                              disabled={actionsLocked}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm"
-                              onClick={() => handleToggle(p)}
-                              disabled={actionsLocked}
-                            >
-                              {busy && <Spinner small />} {p.enabled ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-danger-outline"
-                              onClick={() => {
-                                setNotice(null);
-                                setDialog({ type: 'delete', provider: p });
-                              }}
-                              disabled={actionsLocked}
-                            >
-                              Unregister
-                            </button>
-                          </>
+      <Card className="overflow-hidden p-0">
+        {loading && providers.length === 0 && <TableSkeleton label="Loading providers..." />}
+        {!loading && !error && providers.length === 0 && (
+          <EmptyState
+            icon={ServerIcon}
+            title="No providers yet"
+            action={
+              <Button onClick={() => setDialog({ type: 'register' })}>
+                <PlusIcon aria-hidden="true" />
+                Register provider
+              </Button>
+            }
+          >
+            Register a provider to start sending.
+          </EmptyState>
+        )}
+        {providers.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="ps-4">Provider</TableHead>
+                <TableHead className="hidden md:table-cell">Channels</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="hidden sm:table-cell">Source</TableHead>
+                <TableHead className="pe-4 text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {providers.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="ps-4">
+                    <div className="flex flex-col">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {p['display-name'] || p.id}
+                        {isReadOnly(p) && (
+                          <LockIcon className="size-3.5 text-muted-foreground sm:hidden" aria-label="Built-in, read-only" />
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      </span>
+                      <code className="font-mono text-muted-foreground text-xs">{p.id}</code>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <ChannelBadges channels={p.channels} />
+                  </TableCell>
+                  <TableCell>
+                    <EnabledBadge enabled={p.enabled} />
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <SourceBadge provider={p} />
+                  </TableCell>
+                  <TableCell className="pe-4 text-right">
+                    <RowActions
+                      provider={p}
+                      locked={actionsLocked}
+                      busy={busyId === p.id}
+                      onView={() => setDialog({ type: 'view', provider: p })}
+                      onEdit={() => setDialog({ type: 'edit', provider: p })}
+                      onToggle={() => handleToggle(p)}
+                      onDelete={() => setDialog({ type: 'delete', provider: p })}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
 
-      {dialog?.type === 'view' && <ViewProviderModal id={dialog.provider.id} onClose={closeDialog} />}
+      {dialog?.type === 'view' && <ViewProviderDialog id={dialog.provider.id} onClose={closeDialog} />}
       {dialog?.type === 'edit' && (
-        <EditProviderModal id={dialog.provider.id} onClose={closeDialog} onSaved={handleSaved} />
+        <EditProviderDialog id={dialog.provider.id} onClose={closeDialog} onSaved={handleSaved} />
       )}
-      {dialog?.type === 'register' && <RegisterProviderModal onClose={closeDialog} onSaved={handleSaved} />}
+      {dialog?.type === 'register' && <RegisterProviderDialog onClose={closeDialog} onSaved={handleSaved} />}
       {dialog?.type === 'delete' && (
-        <ConfirmDialog
-          title={`Unregister ${dialog.provider.id}?`}
-          confirmLabel="Unregister"
-          pending={remove.pending}
-          error={remove.error}
-          onConfirm={handleDelete}
-          onCancel={closeDialog}
-        >
-          <p>
-            This removes <strong>{dialog.provider['display-name'] || dialog.provider.id}</strong> and its stored
-            credentials from the server. Sends that name this provider will fail. This cannot be undone.
-          </p>
-        </ConfirmDialog>
+        <AlertDialog open onOpenChange={(open) => !open && !remove.pending && closeDialog()}>
+          <AlertDialogPopup>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Unregister {dialog.provider.id}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes <strong className="text-foreground">{dialog.provider['display-name'] || dialog.provider.id}</strong>{' '}
+                and its stored credentials from the server. Sends that name this provider will fail. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {remove.error && (
+              <div className="px-6 pb-4">
+                <ErrorAlert error={remove.error} />
+              </div>
+            )}
+            <AlertDialogFooter>
+              <AlertDialogClose render={<Button variant="ghost" />} disabled={remove.pending}>
+                Cancel
+              </AlertDialogClose>
+              <Button variant="destructive" loading={remove.pending} onClick={handleDelete}>
+                Unregister
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialog>
       )}
     </section>
   );
