@@ -34,39 +34,49 @@ npm run preview   # serve the production build
 
 ## Switching to the real backend
 
-Configuration comes from Vite environment variables. Copy `.env.example` to `.env.local`, edit it, and restart
-`npm run dev`.
+All settings live in one file, `.env` in the project root. It is ignored by git, so each developer keeps
+their own. Create it if it does not exist, and restart `npm run dev` after any change.
 
-| Variable | Default | Meaning |
+| Variable | Default (no `.env`) | Meaning |
 |---|---|---|
 | `VITE_USE_MOCK_API` | `true` | Mock mode stays on unless this is exactly `false`. |
-| `VITE_API_BASE_URL` | `http://localhost:8080` | Backend base URL, no trailing slash. Empty means same origin. |
+| `VITE_API_BASE_URL` | `http://localhost:8080` | Backend base URL, no trailing slash. Empty means same origin (the dev proxy). |
 | `DEV_PROXY_TARGET` | unset | Dev server only. Forwards `/api/*` to this URL. |
 
-**Local backend** (`http://localhost:8080`):
-
-```
-VITE_USE_MOCK_API=false
-VITE_API_BASE_URL=http://localhost:8080
-```
-
-**Azure backend.** The Azure service does not currently send CORS headers, so a browser page on
-`localhost` cannot call it directly. Use the dev proxy instead: leave the base URL empty so requests go to
-the Vite server, which forwards them.
+Neither the local nor the Azure backend sends CORS headers, so a page on `localhost:5180` cannot call them
+directly. Leave `VITE_API_BASE_URL` empty and set `DEV_PROXY_TARGET` instead; the Vite dev server forwards
+the requests. Keep exactly one `DEV_PROXY_TARGET` line active:
 
 ```
 VITE_USE_MOCK_API=false
 VITE_API_BASE_URL=
+
+# Local backend:
+# DEV_PROXY_TARGET=http://localhost:8080
+# Deployed backend (Azure):
 DEV_PROXY_TARGET=https://messagin-service-gshecfhwaubth6fk.centralindia-01.azurewebsites.net
 ```
 
-The same applies to a local backend that rejects cross-origin requests: point `DEV_PROXY_TARGET` at it.
-For a deployed build, either enable CORS on the backend for the frontend's origin or serve both from the same
-origin behind a reverse proxy.
+The proxy exists only in `npm run dev`. For a production build, set `VITE_API_BASE_URL` to the backend URL
+before `npm run build`, and either enable CORS on the backend for the frontend's origin or serve both from
+the same origin behind a reverse proxy.
 
 The header shows which mode is active ("Mock API" or "Live: ...").
 
 Backend API docs: `{baseURL}/swagger-ui.html` and `{baseURL}/v3/api-docs`.
+
+## Deploying to Vercel
+
+`vercel.json` builds the app and forwards `/api/*` to the Azure backend, so the browser only talks to Vercel
+and the backend needs no CORS setup (this mirrors the dev proxy).
+
+1. Push the repository to GitHub, then in Vercel: **Add New** > **Project** > import this repository.
+   The framework, build command and output folder come from `vercel.json`.
+2. Under **Environment Variables**, add `VITE_USE_MOCK_API` = `false` and `VITE_API_BASE_URL` = `/`.
+   `.env` is not in git, so without these the deployed app falls back to mock mode.
+3. **Deploy**. Every push to the main branch redeploys. After changing an environment variable, redeploy.
+
+To point the deployed app at a different backend, change the `destination` in `vercel.json`.
 
 ## Mock mode
 
