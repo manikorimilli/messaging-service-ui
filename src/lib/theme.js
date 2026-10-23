@@ -8,9 +8,9 @@ const media = window.matchMedia('(prefers-color-scheme: dark)');
 export function getPreference() {
   try {
     const value = localStorage.getItem(KEY);
-    return value === 'light' || value === 'dark' ? value : 'system';
+    return value === 'light' || value === 'dark' ? value : 'dark';
   } catch {
-    return 'system';
+    return 'dark';
   }
 }
 
