@@ -3,6 +3,7 @@ export const ERROR_HELP = {
   VALIDATION_FAILED: 'The request did not pass validation. Fix the problems listed and try again.',
   UNSUPPORTED_PROVIDER: 'The selected provider cannot handle this request. Choose another provider or use the primary provider.',
   UNSUPPORTED_MESSAGE_TYPE: 'Only SMS messages are supported right now.',
+  JOB_RUN_NOT_FOUND: 'No job run has this ID. The list may have changed; refresh it and try again.',
   PROVIDER_NOT_FOUND: 'No provider has this ID. It may have been unregistered. Refresh the provider list.',
   PROVIDER_ALREADY_EXISTS: 'A provider with this ID already exists. IDs are not case-sensitive, so pick a different ID or edit the existing provider.',
   PROVIDER_READ_ONLY: 'This is a built-in provider from providers.json. It can be viewed but not changed or removed through the API.',

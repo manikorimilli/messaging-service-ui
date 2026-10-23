@@ -1,6 +1,7 @@
 // The only module pages import for data. It builds the exact request bodies
 // from the backend contract and hands them to either the mock or the real API.
 import { config } from '../config.js';
+import { camelizeKeys } from '../utils/keys.js';
 import { toWritePayload } from '../utils/providerConfig.js';
 import * as mockApi from './mockApi.js';
 import * as realApi from './realApi.js';
@@ -32,4 +33,7 @@ export const api = {
   deleteProvider: (id) => impl.deleteProvider(id),
   sendSms: (input) => impl.sendSms(buildSmsRequest(input)),
   sendBatchSms: (input) => impl.sendBatchSms(buildBatchRequest(input)),
+  // Runs of the backend's scheduled job, newest first. Read-only.
+  listJobRuns: async () => camelizeKeys(await impl.listJobRuns()),
+  getJobRun: async (runId) => camelizeKeys(await impl.getJobRun(runId)),
 };

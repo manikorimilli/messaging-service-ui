@@ -52,5 +52,3 @@ export function usesTwilioTemplates(providerId) {
 export function templatesForProvider(providerId) {
   return usesTwilioTemplates(providerId) ? TWILIO_TEMPLATES : GENERAL_TEMPLATES;
 }
-
-export const ALL_TEMPLATES = [...TWILIO_TEMPLATES, ...GENERAL_TEMPLATES];

@@ -7,7 +7,7 @@
 //   ...999  provider times out (PROVIDER_TIMEOUT)
 //   others  accepted
 import { ApiError } from './ApiError.js';
-import { MOCK_PRIMARY_PROVIDER, MOCK_PROVIDERS, MOCK_PROVIDERS_IN_USE } from './mockData.js';
+import { createMockJobRuns, MOCK_PRIMARY_PROVIDER, MOCK_PROVIDERS, MOCK_PROVIDERS_IN_USE } from './mockData.js';
 import { MASKED_VALUE } from '../utils/providerConfig.js';
 import {
   BODY_MAX_LENGTH,
@@ -19,10 +19,12 @@ import {
 const SECRET_NAME = /secret|token|password|key/i;
 
 let store = new Map();
+let jobRuns = [];
 let latencyMs = 450;
 
 export function resetMockStore() {
   store = new Map(MOCK_PROVIDERS.map((p) => [p.id, structuredClone(p)]));
+  jobRuns = createMockJobRuns();
 }
 resetMockStore();
 
@@ -220,4 +222,20 @@ export async function sendBatchSms(payload) {
     duplicatesRemoved: recipients.length - unique.length,
     results,
   };
+}
+
+// The list omits per-recipient results; the detail includes them, like the backend.
+export async function listJobRuns() {
+  await wait();
+  return jobRuns.map(({ groups, ...run }) => ({
+    ...structuredClone(run),
+    groups: groups.map(({ results, ...group }) => structuredClone(group)),
+  }));
+}
+
+export async function getJobRun(runId) {
+  await wait();
+  const run = jobRuns.find((r) => r['run-id'] === runId);
+  if (!run) throw problem(404, 'JOB_RUN_NOT_FOUND', 'Job run not found', `Job run '${runId}' was not found.`);
+  return structuredClone(run);
 }

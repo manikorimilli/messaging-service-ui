@@ -9,3 +9,5 @@ export const updateProvider = (id, payload) => request('PUT', providerPath(id), 
 export const deleteProvider = (id) => request('DELETE', providerPath(id));
 export const sendSms = (payload) => request('POST', '/api/v1/messages', payload);
 export const sendBatchSms = (payload) => request('POST', '/api/v1/messages/batch', payload);
+export const listJobRuns = () => request('GET', '/api/v1/job-runs');
+export const getJobRun = (runId) => request('GET', `/api/v1/job-runs/${encodeURIComponent(runId)}`);

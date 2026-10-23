@@ -63,11 +63,16 @@ export async function request(method, path, body) {
 
     if (!response.ok) {
       const problem = data && typeof data === 'object' ? data : {};
+      // A server or gateway error page (HTML) is not worth showing; plain text is.
+      const isHtml = /^\s*</.test(text);
+      const fallbackDetail = isHtml
+        ? `The server returned an error page instead of an API response (HTTP ${response.status}). The backend may be down or failing to start.`
+        : text.slice(0, 300) || null;
       throw new ApiError({
         status: response.status,
         code: problem.code,
         title: problem.title || response.statusText || `HTTP ${response.status}`,
-        detail: problem.detail || (data ? null : text.slice(0, 300) || null),
+        detail: problem.detail || (data ? null : fallbackDetail),
         problems: collectProblems(problem),
         providerErrorCode: problem.providerErrorCode,
       });

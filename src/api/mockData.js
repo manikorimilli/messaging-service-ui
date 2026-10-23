@@ -101,3 +101,66 @@ export const MOCK_PROVIDERS = [
     response: { 'id-path': '$.messages[0].id', error: { 'message-path': '$.errors[0].message' } },
   },
 ];
+
+// Sample scheduled-job runs, in the backend's kebab-case shape (detail form,
+// with per-recipient results). Times are relative to page load.
+function minutesAgo(minutes, extraMs = 0) {
+  return new Date(Date.now() - minutes * 60000 + extraMs).toISOString();
+}
+
+function mockRun(id, minutes, groups) {
+  const total = groups.reduce((n, g) => n + g.total, 0);
+  const accepted = groups.reduce((n, g) => n + g.accepted, 0);
+  return {
+    'run-id': id,
+    'started-at': minutesAgo(minutes),
+    'finished-at': minutesAgo(minutes, 1200),
+    status: 'PARTIAL',
+    'targets-version': '2026-10-20',
+    total,
+    accepted,
+    failed: total - accepted,
+    groups,
+  };
+}
+
+const TWILIO_REJECTED = {
+  status: 'FAILED',
+  code: 'PROVIDER_REJECTED',
+  'provider-error-code': '572006',
+  detail: 'Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates.',
+};
+
+function mockGroups() {
+  return [
+    {
+      provider: 'TWILIO',
+      status: 'SENT',
+      total: 2,
+      accepted: 0,
+      failed: 2,
+      'duplicates-removed': 0,
+      results: [
+        { to: '+919876543210', ...TWILIO_REJECTED },
+        { to: '+919876543211', ...TWILIO_REJECTED },
+      ],
+    },
+    {
+      provider: 'VONAGE',
+      status: 'SENT',
+      total: 1,
+      accepted: 1,
+      failed: 0,
+      'duplicates-removed': 0,
+      results: [{ to: '+919876543212', status: 'ACCEPTED', 'provider-message-id': 'mock-6bfdbd7f', 'provider-status': '0' }],
+    },
+  ];
+}
+
+export function createMockJobRuns() {
+  return [
+    mockRun('mock-run-0003', 1, mockGroups()),
+    mockRun('mock-run-0002', 2, mockGroups()),
+    mockRun('mock-run-0001', 3, mockGroups()),
+  ];
+}

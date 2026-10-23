@@ -5,7 +5,8 @@ A small React frontend for the multi-provider notification service. It covers:
 - **Providers**: list, view, register (paste or upload JSON), edit, enable, disable and unregister providers.
 - **Send SMS**: one message to one recipient.
 - **Bulk SMS**: one message to up to 100 recipients, with per-recipient results.
-- **Scheduled jobs**: a read-only demo of planned jobs from sample data.
+- **Scheduled jobs**: results of the backend's scheduled SMS job (`GET /api/v1/job-runs`), with per-recipient
+  details for each run (`GET /api/v1/job-runs/{runId}`).
 
 The backend supports SMS only. Email, Call and WhatsApp appear in the navigation as "soon" and do nothing yet.
 
@@ -102,7 +103,7 @@ src/
   components/               reusable UI: alerts, modal, confirm dialog, provider select, JSON form...
   hooks/                    useProviders, useAsyncAction (blocks duplicate submits)
   utils/                    validation rules, provider config helpers, error explanations
-  data/                     frontend-only sample templates and sample target_audiance.json
+  data/                     frontend-only sample templates
 ```
 
 ## Behaviour notes
@@ -124,9 +125,10 @@ src/
   With Twilio or the primary provider selected, the list shows the Twilio test values (`sms_2fa`,
   `sms_appointment_reminders`, ...), which are the only bodies Twilio accepts. Vonage and other providers get
   free-text samples. Both lists live in `src/data/sampleTemplates.js`.
-- **Scheduled jobs** (its own page) is a labelled demo built from `src/data/target_audiance.sample.json`,
-  grouped by provider and message template.
-  Scheduling and file processing belong to the backend, and there is no scheduling endpoint, so nothing in
-  that section sends or schedules anything.
+- **Scheduled jobs** lists runs of the backend's scheduled job, newest first, and refreshes every 30 seconds
+  while the toggle is on. **Details** opens one run with each provider's per-recipient results. The page is
+  read-only: the backend owns the schedule and its targets file, and the API has no way to start or change a
+  job. Job-run responses use kebab-case keys (`run-id`, `provider-error-code`); the API layer converts them to
+  camelCase. In mock mode the page shows three sample runs.
 - **Credentials** are never written to browser storage or logged. Provider JSON lives only in component state
   while a form is open.

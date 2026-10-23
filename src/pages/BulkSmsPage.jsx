@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { api } from '../api/index.js';
 import { Alert } from '../components/Alert.jsx';
-import { Badge, SimulatedBadge } from '../components/Badge.jsx';
+import { SimulatedBadge } from '../components/Badge.jsx';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
 import { MessageField } from '../components/MessageField.jsx';
 import { MockHints } from '../components/MockHints.jsx';
 import { ProviderSelect } from '../components/ProviderSelect.jsx';
+import { RecipientResultsTable } from '../components/RecipientResultsTable.jsx';
 import { RecipientsInput } from '../components/RecipientsInput.jsx';
-import { EmptyState, Spinner } from '../components/States.jsx';
+import { Stat } from '../components/Stat.jsx';
+import { Spinner } from '../components/States.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useProviders } from '../hooks/useProviders.js';
-import { ERROR_HELP } from '../utils/errors.js';
 import { MAX_RECIPIENTS, mergeRecipients, validateBody, validateRecipients } from '../utils/validation.js';
-
-function Stat({ label, value, tone }) {
-  return (
-    <div className={`stat ${tone ? `stat-${tone}` : ''}`}>
-      <span className="stat-value">{value ?? 0}</span>
-      <span className="stat-label">{label}</span>
-    </div>
-  );
-}
 
 function outcome(result) {
   if (result.failed === 0) {
@@ -38,7 +30,6 @@ function outcome(result) {
 
 function BatchResult({ result }) {
   const summary = outcome(result);
-  const results = Array.isArray(result.results) ? result.results : [];
 
   return (
     <section className="card result" aria-live="polite">
@@ -61,54 +52,7 @@ function BatchResult({ result }) {
         Provider: <code>{result.provider}</code>
       </p>
 
-      {results.length === 0 ? (
-        <EmptyState title="No per-recipient results returned" />
-      ) : (
-        <div className="table-card">
-          <table className="table responsive-table">
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Status</th>
-                <th>Message ID</th>
-                <th>Provider status</th>
-                <th>Error</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((r, i) => {
-                const failed = r.status !== 'ACCEPTED';
-                return (
-                  <tr key={`${r.to}-${i}`} className={failed ? 'row-failed' : undefined}>
-                    <td data-label="Recipient">
-                      <code>{r.to}</code>
-                    </td>
-                    <td data-label="Status">
-                      {failed ? <Badge tone="error">{r.status || 'FAILED'}</Badge> : <Badge tone="success">Accepted</Badge>}
-                    </td>
-                    <td data-label="Message ID">
-                      {r.providerMessageId ? <code className="break">{r.providerMessageId}</code> : <span className="muted">none</span>}
-                    </td>
-                    <td data-label="Provider status">{r.providerStatus ?? <span className="muted">none</span>}</td>
-                    <td data-label="Error">
-                      {failed ? (
-                        <div className="error-cell">
-                          {r.code && <code>{r.code}</code>}
-                          {r.providerErrorCode && <span>Provider code {r.providerErrorCode}</span>}
-                          {r.detail && <span>{r.detail}</span>}
-                          {r.code && ERROR_HELP[r.code] && <span className="hint">{ERROR_HELP[r.code]}</span>}
-                        </div>
-                      ) : (
-                        <span className="muted">none</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <RecipientResultsTable results={result.results} />
     </section>
   );
 }

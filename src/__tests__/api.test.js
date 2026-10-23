@@ -79,6 +79,15 @@ describe('httpClient.request', () => {
     });
   });
 
+  it('replaces an HTML error page with a readable message', async () => {
+    const html = '<!doctype html><html><head><title>HTTP Status 500 - Internal Server Error</title></head></html>';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 500, ok: false, statusText: 'Internal Server Error', text: async () => html }));
+    const error = await request('GET', '/api/v1/providers').catch((e) => e);
+    expect(error).toMatchObject({ status: 500, title: 'Internal Server Error' });
+    expect(error.detail).toMatch(/error page instead of an API response/);
+    expect(error.detail).not.toContain('<');
+  });
+
   it('reports network failures as NETWORK_ERROR', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     await expect(request('GET', '/api/v1/providers')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
