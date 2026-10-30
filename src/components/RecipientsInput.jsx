@@ -66,7 +66,7 @@ export function RecipientsInput({ id, recipients, onChange, draft, onDraftChange
         <span className="flex items-center gap-2 text-muted-foreground text-xs tabular-nums">
           {recipients.length} / {MAX_RECIPIENTS}
           {recipients.length > 0 && !disabled && (
-            <Button variant="ghost" size="xs" className="rounded-full" onClick={() => onChange([])}>
+            <Button type="button" variant="ghost" size="xs" className="rounded-full" onClick={() => onChange([])}>
               Clear all
             </Button>
           )}
@@ -89,6 +89,7 @@ export function RecipientsInput({ id, recipients, onChange, draft, onDraftChange
               >
                 <span>{number}</span>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon-xs"
                   className="rounded-full hover:bg-destructive/15 hover:text-destructive"
@@ -122,6 +123,7 @@ export function RecipientsInput({ id, recipients, onChange, draft, onDraftChange
             aria-describedby={error ? `${id}-error` : `${id}-description`}
           />
           <Button
+            type="button"
             variant="secondary"
             size="sm"
             className="rounded-full"

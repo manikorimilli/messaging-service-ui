@@ -39,6 +39,7 @@ export function ErrorAlert({ error, onDismiss }) {
       </div>
       {onDismiss && (
         <Button
+          type="button"
           variant="ghost"
           size="icon-sm"
           className="absolute end-2 top-2 rounded-full"

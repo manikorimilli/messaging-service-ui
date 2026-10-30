@@ -76,13 +76,14 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
         )}
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="rounded-full" onClick={() => fileRef.current?.click()} disabled={submit.pending}>
+          <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => fileRef.current?.click()} disabled={submit.pending}>
             <UploadIcon aria-hidden="true" />
             Upload JSON
           </Button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={handleFile} />
           {mode === 'create' && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
               className="rounded-full"
@@ -93,7 +94,7 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
               Insert example
             </Button>
           )}
-          <Button variant="outline" size="sm" className="rounded-full" onClick={validate} disabled={submit.pending}>
+          <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={validate} disabled={submit.pending}>
             <ListChecksIcon aria-hidden="true" />
             Validate
           </Button>
@@ -145,7 +146,7 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
       </div>
 
       <DialogFooter className="mx-0 mb-0 border-t bg-muted/40 px-6 py-4">
-        <Button variant="ghost" className="rounded-full" onClick={onCancel} disabled={submit.pending}>
+        <Button type="button" variant="ghost" className="rounded-full" onClick={onCancel} disabled={submit.pending}>
           Cancel
         </Button>
         <Button type="submit" className="rounded-full px-5 shadow-lg shadow-primary/25" disabled={submit.pending}>

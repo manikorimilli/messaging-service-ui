@@ -34,7 +34,7 @@ export function MessageField({ id, provider, value, onChange, onBlur, error, dis
       aside={
         <DropdownMenu>
           <DropdownMenuTrigger asChild disabled={disabled}>
-            <Button variant="outline" size="sm" className="rounded-full">
+            <Button type="button" variant="outline" size="sm" className="rounded-full">
               <SparklesIcon aria-hidden="true" />
               {twilio ? 'Twilio template' : 'Template'}
               <ChevronDownIcon aria-hidden="true" />
