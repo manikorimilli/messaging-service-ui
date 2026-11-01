@@ -48,3 +48,11 @@ export function formatRelative(iso, now = Date.now()) {
   const [unit, size] = RELATIVE_UNITS.find(([, s]) => Math.abs(seconds) >= s) || RELATIVE_UNITS.at(-1);
   return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round(seconds / size), unit);
 }
+
+// Short date and time for chart labels, for example "24 Oct, 10:00".
+export function formatShortDateTime(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}

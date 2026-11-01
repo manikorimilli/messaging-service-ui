@@ -7,6 +7,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://messagin-service-gshecfhwaubth6fk.centralindia-01.azurewebsites.net/api/:path*"
+    },
+    {
+      "source": "/overview",
+      "destination": "/index.html"
     }
   ]
 }

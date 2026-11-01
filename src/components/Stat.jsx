@@ -6,8 +6,9 @@ const TONES = {
   primary: 'text-primary',
 };
 
-// Summary tile with an optional icon. size="sm" suits text values such as dates or badges.
-export function Stat({ label, value, tone, size, icon: Icon }) {
+// Summary tile with an optional icon and an optional hint line under the value.
+// size="sm" suits text values such as dates or badges.
+export function Stat({ label, value, tone, size, icon: Icon, hint }) {
   return (
     <div
       className={cn(
@@ -27,6 +28,7 @@ export function Stat({ label, value, tone, size, icon: Icon }) {
       >
         {value ?? 0}
       </div>
+      {hint && <p className="mt-1 text-muted-foreground text-xs">{hint}</p>}
     </div>
   );
 }

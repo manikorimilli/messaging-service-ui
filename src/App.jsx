@@ -9,6 +9,7 @@ import { AppSidebar } from './components/layout/AppSidebar.jsx';
 import { Backdrop } from './components/layout/Backdrop.jsx';
 import { config } from './config.js';
 import { BulkSmsPage } from './pages/BulkSmsPage.jsx';
+import { OverviewPage } from './pages/OverviewPage.jsx';
 import { ProvidersPage } from './pages/ProvidersPage.jsx';
 import { ScheduledJobsPage } from './pages/ScheduledJobsPage.jsx';
 import { SendSmsPage } from './pages/SendSmsPage.jsx';
@@ -20,9 +21,14 @@ const ROUTES = [
   { key: 'scheduled', label: 'Scheduled jobs', icon: CalendarClockIcon, Page: ScheduledJobsPage },
 ];
 
+// Pages reachable only by typing their address. They are not passed to the
+// sidebar or the search, so nothing in the app links to them.
+const HIDDEN_ROUTES = [{ key: 'overview', Page: OverviewPage }];
+const ALL_ROUTES = [...ROUTES, ...HIDDEN_ROUTES];
+
 function routeFromHash() {
   const key = window.location.hash.replace(/^#\/?/, '');
-  return ROUTES.some((r) => r.key === key) ? key : 'providers';
+  return ALL_ROUTES.some((r) => r.key === key) ? key : 'providers';
 }
 
 export default function App() {
@@ -53,7 +59,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  const { Page } = ROUTES.find((r) => r.key === route);
+  const { Page } = ALL_ROUTES.find((r) => r.key === route);
 
   return (
     <TooltipProvider delayDuration={200}>

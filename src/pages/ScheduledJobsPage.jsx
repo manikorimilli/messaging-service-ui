@@ -23,6 +23,7 @@ import { SimulatedBadge } from '../components/Badge.jsx';
 import { ErrorAlert } from '../components/ErrorAlert.jsx';
 import { RefreshButton } from '../components/RefreshButton.jsx';
 import { PageHeader } from '../components/layout/PageHeader.jsx';
+import { OutcomeBar, RunStatus } from '../components/JobRunParts.jsx';
 import { Notice } from '../components/Notice.jsx';
 import { RecipientResultsTable } from '../components/RecipientResultsTable.jsx';
 import { DEFAULT_PAGE_SIZE, TablePagination } from '../components/TablePagination.jsx';
@@ -59,14 +60,6 @@ const TONE_ICON = {
   neutral: CircleDashedIcon,
 };
 
-function RunStatus({ status }) {
-  return (
-    <StatusBadge tone={statusTone(status)} dot>
-      {status || 'UNKNOWN'}
-    </StatusBadge>
-  );
-}
-
 // Rounded icon tile in the colour of a status, or of an explicit tone.
 function StatusTile({ status, tone = statusTone(status), size = 'md' }) {
   const Icon = TONE_ICON[tone];
@@ -81,20 +74,6 @@ function StatusTile({ status, tone = statusTone(status), size = 'md' }) {
     >
       <Icon className={size === 'lg' ? 'size-5' : 'size-4'} />
     </span>
-  );
-}
-
-// Accepted (green) versus failed (red) share, as a thin bar.
-function OutcomeBar({ accepted, failed, total, className }) {
-  const okPct = total ? (accepted / total) * 100 : 0;
-  const failPct = total ? (failed / total) * 100 : 0;
-  return (
-    <div className={cn('flex h-1.5 w-24 gap-0.5 overflow-hidden rounded-full bg-muted', className)} aria-hidden="true">
-      {okPct > 0 && <div className="h-full rounded-full bg-success transition-all duration-700" style={{ width: `${okPct}%` }} />}
-      {failPct > 0 && (
-        <div className="h-full rounded-full bg-destructive/80 transition-all duration-700" style={{ width: `${failPct}%` }} />
-      )}
-    </div>
   );
 }
 
