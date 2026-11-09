@@ -221,13 +221,14 @@ export function ProvidersPage() {
   return (
     <>
       <PageHeader
+        index="01"
         eyebrow="SMS gateway"
         title="Manage your"
         accent="providers"
         description="Every SMS provider the messaging service can route through, built-in or added through the API."
       >
         <RefreshButton onClick={reload} loading={loading} />
-        <Button size="lg" className="rounded-full px-5 shadow-lg shadow-primary/25" onClick={() => setDialog({ type: 'register' })}>
+        <Button size="lg" className="rounded-full px-5" onClick={() => setDialog({ type: 'register' })}>
           <PlusIcon aria-hidden="true" />
           Register provider
         </Button>
@@ -244,7 +245,7 @@ export function ProvidersPage() {
       <ErrorAlert error={error} />
 
       <section
-        className="overflow-hidden rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm"
+        className="overflow-hidden rounded-2xl border bg-card/60 backdrop-blur-sm"
         aria-label="Providers"
       >
         {loading && providers.length === 0 && <TableSkeleton label="Loading providers..." />}

@@ -149,7 +149,7 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
         <Button type="button" variant="ghost" className="rounded-full" onClick={onCancel} disabled={submit.pending}>
           Cancel
         </Button>
-        <Button type="submit" className="rounded-full px-5 shadow-lg shadow-primary/25" disabled={submit.pending}>
+        <Button type="submit" className="rounded-full px-5" disabled={submit.pending}>
           {submit.pending && <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
           {submit.pending ? 'Saving...' : mode === 'update' ? 'Save changes' : 'Register provider'}
         </Button>

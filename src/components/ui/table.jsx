@@ -28,7 +28,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("dark:bg-muted/50 [&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b", className)}
       {...props}
     />
   )
@@ -87,7 +87,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "h-11 px-2 text-left align-middle font-mono text-[11px] font-normal uppercase tracking-[0.14em] whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

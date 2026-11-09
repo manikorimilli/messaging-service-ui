@@ -19,9 +19,9 @@ function SidebarLinks({ routes, route, onNavigate, onSearch, desktop = false }) 
       <div className="mb-5">
         <SearchButton onOpen={onSearch} />
       </div>
-      <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</p>
+      <p className="label-mono mb-3 px-3 text-muted-foreground/70">Workspace</p>
       <nav aria-label="Main" className="space-y-1.5">
-        {routes.map(({ key, label, icon: Icon }) => {
+        {routes.map(({ key, label, icon: Icon }, i) => {
           const active = route === key;
           return (
             <a
@@ -31,28 +31,30 @@ function SidebarLinks({ routes, route, onNavigate, onSearch, desktop = false }) 
               aria-current={active ? 'page' : undefined}
               style={active && desktop ? { viewTransitionName: 'nav-active' } : undefined}
               className={cn(
-                'group relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring',
+                'group relative flex min-h-11 items-center gap-3 rounded-full px-4 text-sm outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring',
                 active
-                  ? 'bg-primary/10 text-foreground ring-1 ring-primary/20'
+                  ? 'bg-sidebar-accent text-foreground ring-1 ring-sidebar-border'
                   : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
               )}
             >
-              <Icon className={cn('size-4 shrink-0', active && 'text-primary')} aria-hidden="true" />
+              <Icon className={cn('size-4 shrink-0', active && 'text-highlight')} aria-hidden="true" />
               {label}
-              {active && <span className="ms-auto size-1.5 rounded-full bg-primary" aria-hidden="true" />}
+              <span className={cn('ms-auto font-mono text-[10px] tracking-widest', active ? 'text-highlight' : 'text-muted-foreground/50')} aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
             </a>
           );
         })}
       </nav>
 
       <div className="mt-8 border-t border-sidebar-border pt-6">
-        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">More channels</p>
+        <p className="label-mono mb-3 px-3 text-muted-foreground/70">More channels</p>
         <ul className="space-y-1">
           {FUTURE_CHANNELS.map(({ label, icon: Icon }) => (
             <li key={label} className="flex min-h-10 items-center gap-3 px-3 text-sm text-muted-foreground/70">
               <Icon className="size-4 shrink-0" aria-hidden="true" />
               {label}
-              <span className="ms-auto rounded-md border border-sidebar-border px-1.5 py-0.5 text-[10px]">Soon</span>
+              <span className="label-mono ms-auto rounded-full border border-sidebar-border px-2 py-0.5 text-[9px]">Soon</span>
             </li>
           ))}
         </ul>
@@ -67,7 +69,7 @@ function SidebarFooter() {
   return (
     <div className="shrink-0 space-y-3 border-t border-sidebar-border px-4 pt-4 pb-5">
       <div className="flex items-center justify-between gap-2 px-1">
-        <span className="text-xs font-medium text-muted-foreground">Environment</span>
+        <span className="label-mono text-muted-foreground/70">Env</span>
         <EnvironmentPill />
       </div>
       <ThemeSwitcher />
@@ -101,7 +103,7 @@ export function AppSidebar({ routes, route }) {
         <SidebarFooter />
       </aside>
 
-      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b bg-sidebar/90 px-4 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b bg-sidebar/80 px-4 backdrop-blur-xl lg:hidden">
         <div className="text-sm"><Logo /></div>
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>

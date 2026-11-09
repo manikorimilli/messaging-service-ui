@@ -10,12 +10,12 @@ export function OverviewPage() {
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center py-12 text-center">
-      <p className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-3.5 py-1.5 font-medium text-muted-foreground text-sm">
+      <p className="inline-flex items-center gap-2 rounded-full border bg-card/60 px-3.5 py-1.5 font-medium text-muted-foreground text-sm">
         <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
         Multi-provider notification service
       </p>
 
-      <h1 className="mt-8 font-extrabold text-5xl leading-none tracking-tight sm:text-6xl lg:text-7xl">
+      <h1 className="mt-8 font-semibold text-5xl text-titanium leading-[0.92] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
         One service.
         <br />
         <span className="text-primary">Every provider.</span>
@@ -26,7 +26,7 @@ export function OverviewPage() {
       </p>
 
       <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <Button asChild size="lg" className="h-11 rounded-full px-6 shadow-lg shadow-primary/25">
+        <Button asChild size="lg" className="h-11 rounded-full px-6">
           <a href="#/send">
             <SendIcon aria-hidden="true" />
             Send SMS

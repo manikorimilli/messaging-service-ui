@@ -6,7 +6,7 @@ export function FormField({ id, label, aside, description, error, footerEnd, chi
   return (
     <div className="space-y-2">
       <div className="flex min-h-7 items-center justify-between gap-2">
-        <Label htmlFor={id} className="font-semibold text-sm">
+        <Label htmlFor={id} className="font-medium text-sm">
           {label}
         </Label>
         {aside}
