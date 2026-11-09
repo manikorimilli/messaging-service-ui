@@ -362,6 +362,7 @@ export function ScheduledJobsPage() {
   return (
     <>
       <PageHeader
+        index="04"
         eyebrow="Automation"
         title="Scheduled"
         accent="job runs"

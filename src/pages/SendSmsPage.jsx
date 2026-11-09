@@ -33,7 +33,7 @@ function SendResult({ result }) {
   return (
     <section
       aria-live="polite"
-      className={`relative overflow-hidden rounded-2xl border border-success/30 bg-card/80 p-5 shadow-sm backdrop-blur-sm ${enter}`}
+      className={`relative overflow-hidden rounded-2xl border border-success/30 bg-card/60 p-5 shadow-sm backdrop-blur-sm ${enter}`}
     >
       <div className="absolute -top-16 -right-16 size-40 rounded-full bg-success/15 blur-2xl" aria-hidden="true" />
       <div className="relative flex items-start gap-3">
@@ -89,6 +89,7 @@ export function SendSmsPage() {
   return (
     <>
       <PageHeader
+        index="02"
         eyebrow="Single message"
         title="Send an"
         accent="SMS"
@@ -99,7 +100,7 @@ export function SendSmsPage() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="overflow-hidden rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm lg:col-span-3"
+          className="overflow-hidden rounded-2xl border bg-card/60 backdrop-blur-sm lg:col-span-3"
         >
           <div className="space-y-1 border-b px-6 py-5">
             <h2 className="font-semibold">Compose</h2>
@@ -149,7 +150,7 @@ export function SendSmsPage() {
             />
           </div>
           <div className="flex items-center justify-end gap-3 border-t bg-muted/30 px-6 py-4">
-            <Button type="submit" size="lg" className="w-full rounded-full px-6 shadow-lg shadow-primary/25 sm:w-auto" disabled={send.pending}>
+            <Button type="submit" size="lg" className="w-full rounded-full px-6 sm:w-auto" disabled={send.pending}>
               {send.pending ? (
                 <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
               ) : (
@@ -163,13 +164,13 @@ export function SendSmsPage() {
         <aside className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <ErrorAlert error={send.error} onDismiss={send.reset} />
           {send.pending && (
-            <div className="rounded-2xl border bg-card/80">
+            <div className="rounded-2xl border bg-card/60">
               <LoadingState label="Sending message..." />
             </div>
           )}
           {send.data && <SendResult result={send.data} />}
           {!send.data && !send.error && !send.pending && (
-            <div className="rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border bg-card/60 backdrop-blur-sm">
               <EmptyState icon={MessageSquareDashedIcon} title="No message sent yet">
                 The provider response appears here after you send.
               </EmptyState>

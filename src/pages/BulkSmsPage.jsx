@@ -37,7 +37,7 @@ function BatchResult({ result }) {
   const summary = outcome(result);
 
   return (
-    <section aria-live="polite" className={`space-y-5 rounded-2xl border bg-card/80 p-5 shadow-sm backdrop-blur-sm md:p-6 ${enter}`}>
+    <section aria-live="polite" className={`space-y-5 rounded-2xl border bg-card/60 p-5 shadow-sm backdrop-blur-sm md:p-6 ${enter}`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <h2 className="flex flex-wrap items-center gap-2 font-semibold text-lg">
@@ -105,6 +105,7 @@ export function BulkSmsPage() {
   return (
     <>
       <PageHeader
+        index="03"
         eyebrow="Broadcast"
         title="Bulk"
         accent="messaging"
@@ -115,7 +116,7 @@ export function BulkSmsPage() {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="overflow-hidden rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm lg:col-span-3"
+          className="overflow-hidden rounded-2xl border bg-card/60 backdrop-blur-sm lg:col-span-3"
         >
           <div className="space-y-1 border-b px-6 py-5">
             <h2 className="font-semibold">Batch message</h2>
@@ -156,7 +157,7 @@ export function BulkSmsPage() {
             />
           </div>
           <div className="flex items-center justify-end gap-3 border-t bg-muted/30 px-6 py-4">
-            <Button type="submit" size="lg" className="w-full rounded-full px-6 shadow-lg shadow-primary/25 sm:w-auto" disabled={send.pending}>
+            <Button type="submit" size="lg" className="w-full rounded-full px-6 sm:w-auto" disabled={send.pending}>
               {send.pending ? (
                 <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
               ) : (
@@ -174,12 +175,12 @@ export function BulkSmsPage() {
         <aside className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <ErrorAlert error={send.error} onDismiss={send.reset} />
           {send.pending && (
-            <div className="rounded-2xl border bg-card/80">
+            <div className="rounded-2xl border bg-card/60">
               <LoadingState label="Sending batch..." />
             </div>
           )}
           {!send.data && !send.error && !send.pending && (
-            <div className="rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm">
+            <div className="rounded-2xl border bg-card/60 backdrop-blur-sm">
               <EmptyState icon={MessagesSquareIcon} title="No batch sent yet">
                 Per-recipient results appear below after you send.
               </EmptyState>

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 const TONES = {
   success: 'text-success-foreground',
   error: 'text-destructive',
-  primary: 'text-primary',
+  primary: 'text-highlight',
 };
 
 // Summary tile with an optional icon and an optional hint line under the value.
@@ -12,23 +12,23 @@ export function Stat({ label, value, tone, size, icon: Icon, hint }) {
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-2xl border bg-card/80 p-4 shadow-xs backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        'group relative overflow-hidden rounded-2xl border bg-card/60 p-5 backdrop-blur-sm transition-colors duration-300 hover:border-foreground/20 motion-reduce:transition-none',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-muted-foreground text-xs">{label}</span>
-        {Icon && <Icon className="size-4 text-muted-foreground/70 transition-colors group-hover:text-primary" aria-hidden="true" />}
+        <span className="label-mono text-muted-foreground">{label}</span>
+        {Icon && <Icon className="size-4 text-muted-foreground/70 transition-colors group-hover:text-highlight" aria-hidden="true" />}
       </div>
       <div
         className={cn(
-          'mt-2 font-semibold tabular-nums tracking-tight',
-          size === 'sm' ? 'text-sm' : 'text-3xl',
+          'mt-4 font-semibold tabular-nums',
+          size === 'sm' ? 'text-sm' : 'text-4xl text-titanium tracking-[-0.04em]',
           TONES[tone],
         )}
       >
         {value ?? 0}
       </div>
-      {hint && <p className="mt-1 text-muted-foreground text-xs">{hint}</p>}
+      {hint && <p className="mt-2 font-mono text-[11px] text-muted-foreground/70">{hint}</p>}
     </div>
   );
 }
