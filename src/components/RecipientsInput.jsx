@@ -114,7 +114,7 @@ export function RecipientsInput({ id, recipients, onChange, draft, onDraftChange
             inputMode="tel"
             autoComplete="off"
             className="h-8 flex-1 border-0 bg-transparent px-1 tabular-nums shadow-none focus-visible:ring-0 dark:bg-transparent"
-            placeholder="+919876543210, then press Enter"
+            placeholder="+910000000001, then press Enter"
             value={draft}
             onChange={(e) => handleDraft(e.target.value)}
             onKeyDown={handleKeyDown}

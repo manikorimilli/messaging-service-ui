@@ -4,18 +4,18 @@ import { request } from '../api/httpClient.js';
 
 describe('request builders', () => {
   it('omits provider when using the primary provider', () => {
-    expect(buildSmsRequest({ provider: '', to: '+919876543210', body: 'Hi' })).toEqual({
+    expect(buildSmsRequest({ provider: '', to: '+910000000001', body: 'Hi' })).toEqual({
       type: 'SMS',
-      to: '+919876543210',
+      to: '+910000000001',
       body: 'Hi',
     });
-    expect(buildBatchRequest({ provider: '', recipients: ['+919876543210'], body: 'Hi' })).not.toHaveProperty('provider');
+    expect(buildBatchRequest({ provider: '', recipients: ['+910000000001'], body: 'Hi' })).not.toHaveProperty('provider');
   });
   it('includes provider when one is selected', () => {
-    expect(buildSmsRequest({ provider: 'TWILIO', to: '+919876543210', body: 'Hi' })).toEqual({
+    expect(buildSmsRequest({ provider: 'TWILIO', to: '+910000000001', body: 'Hi' })).toEqual({
       type: 'SMS',
       provider: 'TWILIO',
-      to: '+919876543210',
+      to: '+910000000001',
       body: 'Hi',
     });
   });
@@ -69,13 +69,13 @@ describe('httpClient.request', () => {
       code: 'VALIDATION_FAILED',
       errors: [
         { field: 'body', message: 'must not be blank' },
-        { field: 'to', message: 'must be in E.164 format, for example +919876543210' },
+        { field: 'to', message: 'must be in E.164 format, for example +910000000001' },
       ],
     };
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 400, ok: false, text: async () => JSON.stringify(body) }));
     await expect(request('POST', '/api/v1/messages', {})).rejects.toMatchObject({
       code: 'VALIDATION_FAILED',
-      problems: ['body: must not be blank', 'to: must be in E.164 format, for example +919876543210'],
+      problems: ['body: must not be blank', 'to: must be in E.164 format, for example +910000000001'],
     });
   });
 

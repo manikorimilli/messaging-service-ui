@@ -10,11 +10,11 @@ import {
 
 describe('validatePhone', () => {
   it('accepts E.164 numbers', () => {
-    expect(validatePhone('+919876543210')).toBeNull();
-    expect(validatePhone(' +15550001111 ')).toBeNull();
+    expect(validatePhone('+910000000001')).toBeNull();
+    expect(validatePhone(' +10000000001 ')).toBeNull();
   });
   it('rejects non E.164 numbers', () => {
-    for (const bad of ['', '919876543210', '+0123456789', '+1234567', '+1234567890123456', '+91 98765 43210']) {
+    for (const bad of ['', '910000000001', '+0123456789', '+1234567', '+1234567890123456', '+91 00000 00001']) {
       expect(validatePhone(bad)).not.toBeNull();
     }
   });
@@ -31,26 +31,26 @@ describe('validateBody', () => {
 
 describe('mergeRecipients', () => {
   it('adds valid numbers from a pasted list and reports the rest', () => {
-    const result = mergeRecipients(['+919876543210'], '+919876543211\r\n+919876543210, bad;+919876543212');
-    expect(result.recipients).toEqual(['+919876543210', '+919876543211', '+919876543212']);
-    expect(result.duplicates).toEqual(['+919876543210']);
+    const result = mergeRecipients(['+910000000001'], '+910000000002\r\n+910000000001, bad;+910000000003');
+    expect(result.recipients).toEqual(['+910000000001', '+910000000002', '+910000000003']);
+    expect(result.duplicates).toEqual(['+910000000001']);
     expect(result.invalid).toEqual(['bad']);
     expect(result.overflow).toEqual([]);
   });
   it('stops at the recipient limit', () => {
-    const result = mergeRecipients(['+919876543210'], '+919876543211 +919876543212', 2);
+    const result = mergeRecipients(['+910000000001'], '+910000000002 +910000000003', 2);
     expect(result.recipients).toHaveLength(2);
-    expect(result.overflow).toEqual(['+919876543212']);
+    expect(result.overflow).toEqual(['+910000000003']);
   });
 });
 
 describe('validateRecipients', () => {
   it('enforces 1 to 100 valid recipients', () => {
     expect(validateRecipients([])).toMatch(/at least one/);
-    const many = Array.from({ length: 101 }, (_, i) => `+91987654${String(i).padStart(4, '0')}`);
+    const many = Array.from({ length: 101 }, (_, i) => `+91000000${String(i).padStart(4, '0')}`);
     expect(validateRecipients(many)).toMatch(/limit is 100/);
-    expect(validateRecipients(['+919876543210', 'nope'])).toMatch(/not valid/);
-    expect(validateRecipients(['+919876543210'])).toBeNull();
+    expect(validateRecipients(['+910000000001', 'nope'])).toMatch(/not valid/);
+    expect(validateRecipients(['+910000000001'])).toBeNull();
   });
 });
 

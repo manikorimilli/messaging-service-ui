@@ -14,7 +14,7 @@ describe('mock providers', () => {
     const twilio = list.find((p) => p.id === 'TWILIO');
     expect(twilio['read-only']).toBe(true);
     expect(twilio.variables['auth-token']).toBe('****');
-    expect(twilio.variables.from).toBe('+15550001111');
+    expect(twilio.variables.from).toBe('+10000000001');
   });
 
   it('looks up ids case-insensitively', async () => {
@@ -55,14 +55,14 @@ describe('mock providers', () => {
 
 describe('mock sends', () => {
   it('uses the primary provider when provider is omitted', async () => {
-    const res = await mock.sendSms({ type: 'SMS', to: '+919876543210', body: 'Hello' });
+    const res = await mock.sendSms({ type: 'SMS', to: '+910000000001', body: 'Hello' });
     expect(res).toMatchObject({ status: 'ACCEPTED', provider: 'TWILIO', providerStatus: 'queued' });
     expect(res.providerMessageId).toMatch(/^SM/);
   });
 
   it('rejects disabled providers with 503', async () => {
     await expect(
-      mock.sendSms({ type: 'SMS', provider: 'textlocal', to: '+919876543210', body: 'Hello' }),
+      mock.sendSms({ type: 'SMS', provider: 'textlocal', to: '+910000000001', body: 'Hello' }),
     ).rejects.toMatchObject({ status: 503, code: 'PROVIDER_UNAVAILABLE' });
   });
 
@@ -70,7 +70,7 @@ describe('mock sends', () => {
     const res = await mock.sendBatchSms({
       type: 'SMS',
       provider: 'VONAGE',
-      recipients: ['+919876543210', '+919876543000', '+919876543210'],
+      recipients: ['+910000000001', '+910000001000', '+910000000001'],
       body: 'Hello all',
     });
     expect(res).toMatchObject({ provider: 'VONAGE', total: 2, accepted: 1, failed: 1, duplicatesRemoved: 1 });

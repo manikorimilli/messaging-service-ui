@@ -12,7 +12,7 @@ export function validatePhone(value) {
   const v = value.trim();
   if (!v) return 'Enter a phone number.';
   if (!E164_PATTERN.test(v)) {
-    return 'Use E.164 format: "+", country code, then number, no spaces. Example: +919876543210';
+    return 'Use E.164 format: "+", country code, then number, no spaces. Example: +910000000001';
   }
   return null;
 }

@@ -120,14 +120,14 @@ export function SendSmsPage() {
               id="send-to"
               label="Recipient phone number"
               error={showToError ? toError : null}
-              description="E.164 format, for example +919876543210."
+              description="E.164 format, for example +910000000001."
             >
               <Input
                 id="send-to"
                 type="tel"
                 inputMode="tel"
                 autoComplete="off"
-                placeholder="+919876543210"
+                placeholder="+910000000001"
                 className={cn(controlClass, 'tabular-nums')}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}

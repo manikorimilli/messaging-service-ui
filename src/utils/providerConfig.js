@@ -28,7 +28,7 @@ export const PROVIDER_EXAMPLE = {
   variables: {
     'auth-id': 'MA123',
     'auth-token': 'your-token',
-    from: '+15550001111',
+    from: '+10000000001',
   },
   request: {
     method: 'POST',

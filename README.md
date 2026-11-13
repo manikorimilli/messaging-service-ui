@@ -159,8 +159,8 @@ http://localhost:5173
 
 The bottom of the sidebar shows **Mock mode** or a green **Live** badge, matching your choice in step 5.
 
-Then send a test SMS: open **Send SMS**, enter a number in international format (for example
-`+919876543210`), pick a message from the template menu, and click **Send SMS**. A green
+Then send a test SMS: open **Send Message**, enter a number in international format (for example
+`+910000000001`), pick a message from the template menu, and click **Send Message**. A green
 **Accepted by provider** card means it worked.
 
 > **Mock mode test numbers:** a number ending in `000` is rejected and one ending in `999` times out, so you
