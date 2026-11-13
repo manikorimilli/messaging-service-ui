@@ -92,4 +92,17 @@ describe('httpClient.request', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     await expect(request('GET', '/api/v1/providers')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
   });
+
+  it('keeps the full error response on the ApiError for display', async () => {
+    const body = { title: 'Provider rejected the message', status: 502, code: 'PROVIDER_REJECTED', extra: { raw: 1 } };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 502, ok: false, text: async () => JSON.stringify(body) }));
+    await expect(request('POST', '/api/v1/messages', {})).rejects.toMatchObject({ body });
+  });
+
+  it('keeps a non-JSON error body as text, and no body when nothing arrived', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ status: 503, ok: false, statusText: 'Unavailable', text: async () => '<html>down</html>' }));
+    await expect(request('GET', '/api/v1/providers')).rejects.toMatchObject({ body: '<html>down</html>' });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    await expect(request('GET', '/api/v1/providers')).rejects.toMatchObject({ code: 'NETWORK_ERROR', body: null });
+  });
 });

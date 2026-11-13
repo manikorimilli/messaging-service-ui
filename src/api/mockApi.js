@@ -55,8 +55,10 @@ function toResponse(stored) {
   return { id, 'display-name': displayName, channels, source, 'read-only': source === 'providers.json', enabled, variables, request, response, ...rest };
 }
 
+// Mirrors the backend's problem response, including the body it would send.
 function problem(status, code, title, detail, extra = {}) {
-  return new ApiError({ status, code, title, detail, ...extra });
+  const body = { title, status, detail, code, ...extra };
+  return new ApiError({ status, code, title, detail, ...extra, body });
 }
 
 function findStored(id) {

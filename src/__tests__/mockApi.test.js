@@ -76,4 +76,11 @@ describe('mock sends', () => {
     expect(res).toMatchObject({ provider: 'VONAGE', total: 2, accepted: 1, failed: 1, duplicatesRemoved: 1 });
     expect(res.results[1]).toMatchObject({ status: 'FAILED', code: 'PROVIDER_REJECTED', providerErrorCode: '21211' });
   });
+
+  it('attaches the problem body to failed sends', async () => {
+    await expect(mock.sendSms({ type: 'SMS', provider: 'TWILIO', to: '+910000001000', body: 'Hello' })).rejects.toMatchObject({
+      status: 502,
+      body: { status: 502, code: 'PROVIDER_REJECTED', title: 'Provider rejected the message', providerErrorCode: '21211' },
+    });
+  });
 });

@@ -12,6 +12,7 @@ import { PageHeader } from '../components/layout/PageHeader.jsx';
 import { MessageField } from '../components/MessageField.jsx';
 import { MockHints } from '../components/MockHints.jsx';
 import { ProviderSelect } from '../components/ProviderSelect.jsx';
+import { ResponsePanel } from '../components/ResponsePanel.jsx';
 import { EmptyState, LoadingState } from '../components/States.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useProviders } from '../hooks/useProviders.js';
@@ -162,12 +163,19 @@ export function SendSmsPage() {
 
         <aside className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <ErrorAlert error={send.error} onDismiss={send.reset} />
+          {send.error?.body != null && (
+            <ResponsePanel
+              title={send.error.status ? `Response · HTTP ${send.error.status}` : 'Response'}
+              body={send.error.body}
+            />
+          )}
           {send.pending && (
             <div className="rounded-2xl border bg-card/80">
               <LoadingState label="Sending message..." />
             </div>
           )}
           {send.data && <SendResult result={send.data} />}
+          {send.data && <ResponsePanel title="Response" body={send.data} />}
           {!send.data && !send.error && !send.pending && (
             <div className="rounded-2xl border bg-card/80 shadow-sm backdrop-blur-sm">
               <EmptyState icon={MessageSquareDashedIcon} title="No message sent yet">

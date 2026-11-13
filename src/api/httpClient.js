@@ -1,6 +1,9 @@
 import { config } from '../config.js';
 import { ApiError } from './ApiError.js';
 
+// Longest non-JSON error body kept for display, such as a gateway error page.
+const MAX_TEXT_BODY = 10000;
+
 function serverLabel() {
   return config.apiBaseUrl || globalThis.location?.origin || 'this site';
 }
@@ -75,6 +78,7 @@ export async function request(method, path, body) {
         detail: problem.detail || (data ? null : fallbackDetail),
         problems: collectProblems(problem),
         providerErrorCode: problem.providerErrorCode,
+        body: data ?? (text ? text.slice(0, MAX_TEXT_BODY) : null),
       });
     }
     return data;
