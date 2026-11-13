@@ -1,17 +1,80 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { FileCodeIcon, ListChecksIcon, UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { MASKED_VALUE, PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
+import { detectParameters, withParameterValues } from '../utils/providerParams.js';
 import { parseJson, validateProviderConfig } from '../utils/validation.js';
 import { CodeWindow } from './CodeWindow.jsx';
 import { ErrorAlert } from './ErrorAlert.jsx';
+import { FormField, controlClass } from './FormField.jsx';
 import { Notice } from './Notice.jsx';
 
 const MAX_FILE_BYTES = 256 * 1024;
+
+const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+// One plain text box per placeholder found in the JSON. Values are shown as
+// typed: no masking. A box starts with the matching "variables" value, if any.
+function ParameterFields({ formId, parameters, variables, values, onChange, disabled }) {
+  if (parameters.provider.length === 0 && parameters.sendTime.length === 0) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        No <code className="text-foreground">{'{parameters}'}</code> found in this configuration.
+      </p>
+    );
+  }
+  return (
+    <section aria-labelledby={`${formId}-params`} className="space-y-4 rounded-xl border bg-muted/30 p-4">
+      <div className="space-y-1">
+        <h3 id={`${formId}-params`} className="font-semibold text-sm">
+          Parameters
+        </h3>
+        <p className="text-muted-foreground text-xs">
+          Found from the <code className="text-foreground">{'{...}'}</code> placeholders above. Values are saved in{' '}
+          <code className="text-foreground">variables</code>.
+        </p>
+      </div>
+      {parameters.provider.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {parameters.provider.map((name) => {
+            const id = `${formId}-param-${name}`;
+            const fallback = variables[name];
+            return (
+              <FormField key={name} id={id} label={<code>{name}</code>}>
+                <Input
+                  id={id}
+                  className={controlClass}
+                  value={values[name] ?? (fallback === undefined ? '' : String(fallback))}
+                  onChange={(e) => onChange(name, e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={disabled}
+                />
+              </FormField>
+            );
+          })}
+        </div>
+      )}
+      {parameters.sendTime.length > 0 && (
+        <div className="space-y-2">
+          <p className="font-medium text-muted-foreground text-xs">Filled at send time</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {parameters.sendTime.map((name) => (
+              <li key={name}>
+                <code className="rounded-md border bg-background px-2 py-1 text-xs">{name}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // JSON editor for registering (mode="create") or updating (mode="update") a provider.
 // onSubmit receives the parsed config and should return a promise.
@@ -20,7 +83,23 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
   const fileRef = useRef(null);
   const [text, setText] = useState(initialText);
   const [check, setCheck] = useState(null);
+  const [paramValues, setParamValues] = useState({});
   const submit = useAsyncAction(onSubmit);
+
+  // Parameter boxes are part of registering only. They follow the JSON as it is
+  // typed and disappear while it does not parse.
+  const showParameters = mode === 'create';
+  const draft = useMemo(() => (showParameters ? parseJson(text).value : undefined), [showParameters, text]);
+  const parameters = useMemo(() => detectParameters(draft), [draft]);
+  const draftVariables = isObject(draft?.variables) ? draft.variables : {};
+
+  function withEnteredParameters(cfg) {
+    if (!showParameters) return cfg;
+    const entered = Object.fromEntries(
+      parameters.provider.filter((name) => name in paramValues).map((name) => [name, paramValues[name]]),
+    );
+    return withParameterValues(cfg, entered);
+  }
 
   function validate() {
     const parsed = parseJson(text);
@@ -28,9 +107,15 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
       setCheck({ parseError: parsed.error, problems: [], warnings: [] });
       return null;
     }
-    const result = validateProviderConfig(parsed.value, { mode, pathId: providerId });
+    const cfg = withEnteredParameters(parsed.value);
+    const result = validateProviderConfig(cfg, { mode, pathId: providerId });
     setCheck(result);
-    return result.problems.length ? null : parsed.value;
+    return result.problems.length ? null : cfg;
+  }
+
+  function handleParameter(name, value) {
+    setParamValues((current) => ({ ...current, [name]: value }));
+    setCheck(null);
   }
 
   async function handleSubmit(e) {
@@ -68,10 +153,10 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
           </Notice>
         ) : (
           <p className="text-muted-foreground text-sm">
-            Paste the provider configuration or upload a <code className="text-foreground">.json</code> file. Use raw values in{' '}
-            <code className="text-foreground">variables</code> (no <code className="text-foreground">{'${ENV}'}</code>{' '}
-            placeholders). Keep <code className="text-foreground">{'{{...}}'}</code> mapping placeholders inside{' '}
-            <code className="text-foreground">request</code>.
+            Paste the provider configuration or upload a <code className="text-foreground">.json</code> file. Each{' '}
+            <code className="text-foreground">{'{name}'}</code> or <code className="text-foreground">{'{{name}}'}</code>{' '}
+            placeholder gets a box below for its value. Use raw values, not <code className="text-foreground">{'${ENV}'}</code>{' '}
+            placeholders.
           </p>
         )}
 
@@ -117,6 +202,17 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
             placeholder='{ "id": "...", "display-name": "...", "channels": ["SMS"], ... }'
           />
         </CodeWindow>
+
+        {showParameters && draft !== undefined && (
+          <ParameterFields
+            formId={textareaId}
+            parameters={parameters}
+            variables={draftVariables}
+            values={paramValues}
+            onChange={handleParameter}
+            disabled={submit.pending}
+          />
+        )}
 
         {check?.parseError && (
           <Notice tone="error" title="Cannot read JSON">
