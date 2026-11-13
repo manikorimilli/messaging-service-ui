@@ -1,10 +1,6 @@
-import { useState } from 'react';
-import { FlaskConicalIcon, MenuIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { FlaskConicalIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { config } from '../../config.js';
-import { ThemeToggle } from './ThemeToggle.jsx';
 
 export function Logo() {
   return (
@@ -49,73 +45,5 @@ export function EnvironmentPill({ className }) {
       <span className="size-1.5 rounded-full bg-success animate-pulse-dot motion-reduce:animate-none" aria-hidden="true" />
       Live
     </span>
-  );
-}
-
-function NavLinks({ routes, route, onNavigate, vertical }) {
-  return (
-    <nav aria-label="Main" className={vertical ? 'flex flex-col gap-1' : 'flex items-center gap-1'}>
-      {routes.map(({ key, label, icon: Icon }) => {
-        const active = route === key;
-        return (
-          <a
-            key={key}
-            href={`#/${key}`}
-            onClick={onNavigate}
-            aria-current={active ? 'page' : undefined}
-            // The active tab's highlight glides to the new tab during a page transition.
-            style={active && !vertical ? { viewTransitionName: 'nav-active' } : undefined}
-            className={cn(
-              'flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 font-medium text-sm outline-none transition-all duration-200 focus-visible:ring-3 focus-visible:ring-ring',
-              vertical && 'rounded-lg px-3 py-2.5',
-              active
-                ? 'bg-background text-foreground shadow-sm ring-1 ring-border dark:bg-secondary'
-                : 'text-muted-foreground hover:bg-background/60 hover:text-foreground dark:hover:bg-secondary/60',
-            )}
-          >
-            <Icon className="size-4" aria-hidden="true" />
-            {label}
-          </a>
-        );
-      })}
-    </nav>
-  );
-}
-
-export function AppHeader({ routes, route }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <header className="sticky top-0 z-40 border-border/60 border-b bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/55 dark:border-border dark:bg-card/85">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 md:px-6">
-        <Logo />
-
-        <div className="mx-auto hidden rounded-full border bg-muted/60 p-1 lg:block">
-          <NavLinks routes={routes} route={route} />
-        </div>
-
-        <div className="ms-auto flex items-center gap-2 lg:ms-0">
-          <EnvironmentPill />
-          <ThemeToggle />
-
-          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="rounded-full lg:hidden" aria-label="Open navigation">
-                <MenuIcon aria-hidden="true" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <SheetHeader>
-                <SheetTitle>Messaging console</SheetTitle>
-                <SheetDescription>Multi-provider SMS</SheetDescription>
-              </SheetHeader>
-              <div className="flex flex-col gap-6 px-4">
-                <NavLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} vertical />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </header>
   );
 }

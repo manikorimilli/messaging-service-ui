@@ -3,7 +3,6 @@ import { flushSync } from 'react-dom';
 import { SendIcon, ServerIcon } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from './components/layout/AppSidebar.jsx';
 import { Backdrop } from './components/layout/Backdrop.jsx';
@@ -30,7 +29,6 @@ function routeFromHash() {
 export default function App() {
   const [route, setRoute] = useState(routeFromHash);
   const [opening, setOpening] = useState(true);
-  const { resolved: theme } = useTheme();
 
   useEffect(() => {
     // Remove the entrance styles after launch so refreshes and newly loaded
@@ -72,7 +70,7 @@ export default function App() {
           </footer>
         )}
       </div>
-      <Toaster theme={theme} position="bottom-right" richColors closeButton />
+      <Toaster position="bottom-right" richColors closeButton />
     </TooltipProvider>
   );
 }

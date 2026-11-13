@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { EnvironmentPill, Logo } from './AppHeader.jsx';
-import { ThemeSwitcher } from './ThemeSwitcher.jsx';
 
 function SidebarLinks({ routes, route, onNavigate, desktop = false }) {
   return (
@@ -38,16 +37,15 @@ function SidebarLinks({ routes, route, onNavigate, desktop = false }) {
   );
 }
 
-// Environment and theme sit straight on the sidebar under a divider, like the
-// rest of the navigation, with no card around them.
+// The environment sits straight on the sidebar under a divider, like the
+// rest of the navigation, with no card around it.
 function SidebarFooter() {
   return (
-    <div className="shrink-0 space-y-3 border-t border-sidebar-border px-4 pt-4 pb-5">
+    <div className="shrink-0 border-t border-sidebar-border px-4 pt-4 pb-5">
       <div className="flex items-center justify-between gap-2 px-1">
         <span className="text-xs font-medium text-muted-foreground">Environment</span>
         <EnvironmentPill />
       </div>
-      <ThemeSwitcher />
     </div>
   );
 }

@@ -4,17 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
     <title>Messaging Console</title>
-    <script>
-      (function () {
-        var saved = null;
-        try { saved = localStorage.getItem('theme'); } catch (e) {}
-        // Same rule as src/lib/theme.js: dark unless light or system was chosen.
-        var dark = saved === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : saved !== 'light';
-        document.documentElement.classList.toggle('dark', dark);
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
