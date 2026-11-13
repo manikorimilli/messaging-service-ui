@@ -35,6 +35,18 @@ export function detectParameters(cfg) {
   };
 }
 
+// The value a parameter box shows: what was typed, else the "variables" value.
+export function parameterValue(name, values, variables) {
+  if (name in values) return values[name];
+  const fallback = isObject(variables) ? variables[name] : undefined;
+  return fallback === undefined || fallback === null ? '' : String(fallback);
+}
+
+// Parameter names whose box is empty or only spaces.
+export function missingParameters(names, values, variables) {
+  return names.filter((name) => !parameterValue(name, values, variables).trim());
+}
+
 // Writes the entered parameter values into "variables", where the service looks
 // them up. Blank entries are skipped so they never overwrite an existing value.
 export function withParameterValues(cfg, values) {

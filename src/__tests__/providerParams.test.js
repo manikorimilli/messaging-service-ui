@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
-import { detectParameters, isSendTimeParameter, withParameterValues } from '../utils/providerParams.js';
+import {
+  detectParameters,
+  isSendTimeParameter,
+  missingParameters,
+  parameterValue,
+  withParameterValues,
+} from '../utils/providerParams.js';
+
+describe('parameterValue and missingParameters', () => {
+  it('prefers the typed value, then the variables value', () => {
+    expect(parameterValue('from', { from: 'typed' }, { from: 'saved' })).toBe('typed');
+    expect(parameterValue('from', {}, { from: 'saved' })).toBe('saved');
+    expect(parameterValue('port', {}, { port: 443 })).toBe('443');
+    expect(parameterValue('from', {}, undefined)).toBe('');
+  });
+
+  it('lists parameters that are empty or only spaces, even when variables has a value', () => {
+    const names = ['a', 'b', 'c', 'd'];
+    expect(missingParameters(names, { b: '  ', c: 'x' }, { a: 'saved', b: 'saved' })).toEqual(['b', 'd']);
+    expect(missingParameters([], {}, {})).toEqual([]);
+  });
+});
 
 describe('detectParameters', () => {
   it('finds {x} and {{x}} placeholders anywhere in the config, once each, in order', () => {

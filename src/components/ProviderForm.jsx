@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { FileCodeIcon, ListChecksIcon, UploadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { MASKED_VALUE, PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
-import { detectParameters, withParameterValues } from '../utils/providerParams.js';
+import { detectParameters, missingParameters, parameterValue, withParameterValues } from '../utils/providerParams.js';
 import { parseJson, validateProviderConfig } from '../utils/validation.js';
 import { CodeWindow } from './CodeWindow.jsx';
 import { ErrorAlert } from './ErrorAlert.jsx';
@@ -20,7 +20,7 @@ const isObject = (value) => value !== null && typeof value === 'object' && !Arra
 
 // One plain text box per placeholder found in the JSON. Values are shown as
 // typed: no masking. A box starts with the matching "variables" value, if any.
-function ParameterFields({ formId, parameters, variables, values, onChange, disabled }) {
+function ParameterFields({ formId, parameters, variables, values, missing, onChange, disabled }) {
   if (parameters.provider.length === 0 && parameters.sendTime.length === 0) {
     return (
       <p className="text-muted-foreground text-sm">
@@ -43,13 +43,15 @@ function ParameterFields({ formId, parameters, variables, values, onChange, disa
         <div className="grid gap-4 sm:grid-cols-2">
           {parameters.provider.map((name) => {
             const id = `${formId}-param-${name}`;
-            const fallback = variables[name];
+            const isMissing = missing.includes(name);
             return (
-              <FormField key={name} id={id} label={<code>{name}</code>}>
+              <FormField key={name} id={id} label={<code>{name}</code>} error={isMissing ? 'Enter a value' : undefined}>
                 <Input
                   id={id}
                   className={controlClass}
-                  value={values[name] ?? (fallback === undefined ? '' : String(fallback))}
+                  value={parameterValue(name, values, variables)}
+                  aria-invalid={isMissing || undefined}
+                  aria-describedby={isMissing ? `${id}-error` : undefined}
                   onChange={(e) => onChange(name, e.target.value)}
                   autoComplete="off"
                   spellCheck={false}
@@ -81,6 +83,7 @@ function ParameterFields({ formId, parameters, variables, values, onChange, disa
 export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onCancel }) {
   const textareaId = useId();
   const fileRef = useRef(null);
+  const resultsRef = useRef(null);
   const [text, setText] = useState(initialText);
   const [check, setCheck] = useState(null);
   const [paramValues, setParamValues] = useState({});
@@ -96,22 +99,33 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
   function withEnteredParameters(cfg) {
     if (!showParameters) return cfg;
     const entered = Object.fromEntries(
-      parameters.provider.filter((name) => name in paramValues).map((name) => [name, paramValues[name]]),
+      parameters.provider.filter((name) => name in paramValues).map((name) => [name, paramValues[name].trim()]),
     );
     return withParameterValues(cfg, entered);
   }
 
+  // Checks the JSON and, when registering, that every parameter box has a value.
+  // A passing check keeps the exact config it checked, which is what Save sends.
   function validate() {
     const parsed = parseJson(text);
     if (parsed.error) {
-      setCheck({ parseError: parsed.error, problems: [], warnings: [] });
+      setCheck({ parseError: parsed.error, problems: [], warnings: [], missing: [] });
       return null;
     }
     const cfg = withEnteredParameters(parsed.value);
     const result = validateProviderConfig(cfg, { mode, pathId: providerId });
-    setCheck(result);
-    return result.problems.length ? null : cfg;
+    const missing = showParameters ? missingParameters(parameters.provider, paramValues, parsed.value?.variables) : [];
+    const problems = [...result.problems, ...missing.map((name) => `Enter a value for the ${name} parameter`)];
+    setCheck({ ...result, problems, missing, cfg: problems.length ? null : cfg });
+    return problems.length ? null : cfg;
   }
+
+  // Validate sits above the editor and its results below, so bring them into view.
+  useEffect(() => {
+    if (!check) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    resultsRef.current?.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [check]);
 
   function handleParameter(name, value) {
     setParamValues((current) => ({ ...current, [name]: value }));
@@ -121,6 +135,13 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
   async function handleSubmit(e) {
     e.preventDefault();
     if (submit.pending) return;
+    // Registering is two steps: Validate, then Save. Save stays disabled until
+    // a check passes, and it sends the config that check approved.
+    if (showParameters) {
+      if (check?.cfg) await submit.run(check.cfg);
+      else validate();
+      return;
+    }
     const value = validate();
     if (value) await submit.run(value);
   }
@@ -142,6 +163,7 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
   }
 
   const isValid = check && !check.parseError && check.problems.length === 0;
+  const saveLocked = showParameters && !isValid;
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col" noValidate>
@@ -209,43 +231,56 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
             parameters={parameters}
             variables={draftVariables}
             values={paramValues}
+            missing={check?.missing ?? []}
             onChange={handleParameter}
             disabled={submit.pending}
           />
         )}
 
-        {check?.parseError && (
-          <Notice tone="error" title="Cannot read JSON">
-            {check.parseError}
-          </Notice>
-        )}
-        {check && check.problems.length > 0 && (
-          <Notice tone="error" title="Fix these before submitting">
-            <ul className="list-disc space-y-0.5 ps-4 text-foreground">
-              {check.problems.map((p, i) => (
-                <li key={i}>{p}</li>
-              ))}
-            </ul>
-          </Notice>
-        )}
-        {check && check.warnings.length > 0 && (
-          <Notice tone="warning" title="Notes">
-            <ul className="list-disc space-y-0.5 ps-4">
-              {check.warnings.map((w, i) => (
-                <li key={i}>{w}</li>
-              ))}
-            </ul>
-          </Notice>
-        )}
-        {isValid && !submit.error && <Notice tone="success" title="Configuration looks valid" />}
-        <ErrorAlert error={submit.error} onDismiss={submit.reset} />
+        <div ref={resultsRef} className="space-y-4 empty:hidden">
+          {check?.parseError && (
+            <Notice tone="error" title="Cannot read JSON">
+              {check.parseError}
+            </Notice>
+          )}
+          {check && check.problems.length > 0 && (
+            <Notice tone="error" title="Fix these before submitting">
+              <ul className="list-disc space-y-0.5 ps-4 text-foreground">
+                {check.problems.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
+            </Notice>
+          )}
+          {check && check.warnings.length > 0 && (
+            <Notice tone="warning" title="Notes">
+              <ul className="list-disc space-y-0.5 ps-4">
+                {check.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </Notice>
+          )}
+          {isValid && !submit.error && <Notice tone="success" title="Configuration looks valid" />}
+          <ErrorAlert error={submit.error} onDismiss={submit.reset} />
+        </div>
       </div>
 
       <DialogFooter className="mx-0 mb-0 border-t bg-muted/40 px-6 py-4">
+        {saveLocked && !submit.pending && (
+          <p id={`${textareaId}-save-hint`} className="self-center text-muted-foreground text-xs sm:me-auto">
+            Validate the configuration to enable saving.
+          </p>
+        )}
         <Button type="button" variant="ghost" className="rounded-full" onClick={onCancel} disabled={submit.pending}>
           Cancel
         </Button>
-        <Button type="submit" className="rounded-full px-5 shadow-lg shadow-primary/25" disabled={submit.pending}>
+        <Button
+          type="submit"
+          className="rounded-full px-5 shadow-lg shadow-primary/25"
+          disabled={submit.pending || saveLocked}
+          aria-describedby={saveLocked ? `${textareaId}-save-hint` : undefined}
+        >
           {submit.pending && <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />}
           {submit.pending ? 'Saving...' : mode === 'update' ? 'Save changes' : 'Register provider'}
         </Button>
