@@ -1,5 +1,7 @@
 // Sample providers for mock mode. Secret values here are fake and are
 // never returned to the UI: the mock API masks them as "****", like the backend.
+// The built-in ones use {{name}} placeholders and the ones added through the API
+// use {name}, so both styles the console detects appear in mock data.
 export const MOCK_PRIMARY_PROVIDER = 'TWILIO';
 
 // Providers the mock server pretends are referenced in routing (cannot be deleted).
@@ -74,10 +76,10 @@ export const MOCK_PROVIDERS = [
     request: {
       method: 'POST',
       url: 'https://control.msg91.com/api/v5/flow/',
-      auth: { type: 'header', name: 'authkey', value: '{{auth-key}}' },
+      auth: { type: 'header', name: 'authkey', value: '{auth-key}' },
       body: {
         format: 'json',
-        fields: { sender: '{{sender}}', mobiles: '{{to_digits}}', message: '{{text}}' },
+        fields: { sender: '{sender}', mobiles: '{{to_digits}}', message: '{{text}}' },
       },
     },
     response: { 'id-path': '$.request_id', error: { 'message-path': '$.message' } },
@@ -95,8 +97,8 @@ export const MOCK_PROVIDERS = [
     request: {
       method: 'POST',
       url: 'https://api.textlocal.in/send/',
-      auth: { type: 'bearer', token: '{{api-token}}' },
-      body: { format: 'form', fields: { sender: '{{sender}}', numbers: '{{to_digits}}', message: '{{text}}' } },
+      auth: { type: 'bearer', token: '{api-token}' },
+      body: { format: 'form', fields: { sender: '{sender}', numbers: '{{to_digits}}', message: '{{text}}' } },
     },
     response: { 'id-path': '$.messages[0].id', error: { 'message-path': '$.errors[0].message' } },
   },

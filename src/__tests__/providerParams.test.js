@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import * as mock from '../api/mockApi.js';
+import { MOCK_PROVIDERS } from '../api/mockData.js';
 import { PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
 import {
   detectParameters,
@@ -7,6 +9,7 @@ import {
   parameterValue,
   withParameterValues,
 } from '../utils/providerParams.js';
+import { validateProviderConfig } from '../utils/validation.js';
 
 describe('parameterValue and missingParameters', () => {
   it('prefers the typed value, then the variables value', () => {
@@ -79,5 +82,59 @@ describe('withParameterValues', () => {
     const cfg = { id: 'demo', variables: { from: 'OLD' } };
     expect(withParameterValues(cfg, { from: '' })).toBe(cfg);
     expect(withParameterValues({ id: 'demo' }, { token: 'abc' })).toEqual({ id: 'demo', variables: { token: 'abc' } });
+  });
+});
+
+describe('parameters in the mock providers', () => {
+  it('detects both brace styles, and every provider parameter has a value in variables', () => {
+    for (const provider of MOCK_PROVIDERS) {
+      const { provider: names, sendTime } = detectParameters(provider);
+      expect(names.length, provider.id).toBeGreaterThan(0);
+      expect(missingParameters(names, {}, provider.variables), provider.id).toEqual([]);
+      expect(sendTime.every(isSendTimeParameter), provider.id).toBe(true);
+    }
+    expect(detectParameters(MOCK_PROVIDERS.find((p) => p.id === 'TEXTLOCAL'))).toEqual({
+      provider: ['api-token', 'sender'],
+      sendTime: ['to_digits', 'text'],
+    });
+  });
+});
+
+describe('register flow with parameters', () => {
+  beforeEach(() => {
+    mock.setMockLatency(0);
+    mock.resetMockStore();
+  });
+
+  const cfg = {
+    id: 'demo',
+    'display-name': 'Demo',
+    channels: ['SMS'],
+    request: {
+      method: 'POST',
+      url: 'https://api.example.com/{account}/send',
+      auth: { type: 'bearer', token: '{{token}}' },
+      body: { format: 'json', fields: { from: '{sender}', to: '{{to}}', text: '{uaap.message.text}' } },
+    },
+    response: { 'id-path': '$.id' },
+  };
+
+  it('blocks saving while a parameter is empty', () => {
+    const { provider } = detectParameters(cfg);
+    expect(provider).toEqual(['account', 'token', 'sender']);
+    expect(missingParameters(provider, { account: 'A1', token: ' ' }, cfg.variables)).toEqual(['token', 'sender']);
+  });
+
+  it('saves the entered values in variables and the mock accepts the config', async () => {
+    const values = { account: 'A1', token: 'demo-token', sender: 'DEMO' };
+    const { provider } = detectParameters(cfg);
+    expect(missingParameters(provider, values, cfg.variables)).toEqual([]);
+    const ready = withParameterValues(cfg, values);
+    expect(validateProviderConfig(ready, { mode: 'create' }).problems).toEqual([]);
+
+    await mock.registerProvider(ready);
+    const saved = await mock.getProvider('DEMO');
+    expect(saved.variables).toEqual({ account: 'A1', token: '****', sender: 'DEMO' });
+    expect(saved.request.body.fields.text).toBe('{uaap.message.text}');
   });
 });
