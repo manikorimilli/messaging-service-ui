@@ -22,14 +22,14 @@ export function OverviewPage() {
       </h1>
 
       <p className="mt-6 max-w-xl text-lg text-muted-foreground text-pretty">
-        Connect any SMS gateway from a JSON file, then send one message, a batch, or a daily scheduled run.
+        Connect any SMS gateway from a JSON file, then send messages through it.
       </p>
 
       <div className="mt-10 flex flex-wrap justify-center gap-3">
         <Button asChild size="lg" className="h-11 rounded-full px-6 shadow-lg shadow-primary/25">
           <a href="#/send">
             <SendIcon aria-hidden="true" />
-            Send SMS
+            Send Message
           </a>
         </Button>
         <Button asChild variant="outline" size="lg" className="h-11 rounded-full bg-background/60 px-6">

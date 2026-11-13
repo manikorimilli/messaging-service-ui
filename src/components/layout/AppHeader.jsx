@@ -1,23 +1,10 @@
 import { useState } from 'react';
-import { ChevronDownIcon, FlaskConicalIcon, MailIcon, MenuIcon, MessageCircleIcon, PhoneIcon } from 'lucide-react';
+import { FlaskConicalIcon, MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { config } from '../../config.js';
 import { ThemeToggle } from './ThemeToggle.jsx';
-
-const FUTURE_CHANNELS = [
-  { label: 'Email', icon: MailIcon },
-  { label: 'Call', icon: PhoneIcon },
-  { label: 'WhatsApp', icon: MessageCircleIcon },
-];
 
 export function Logo() {
   return (
@@ -108,25 +95,6 @@ export function AppHeader({ routes, route }) {
         </div>
 
         <div className="ms-auto flex items-center gap-2 lg:ms-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hidden rounded-full text-muted-foreground lg:inline-flex">
-                More channels
-                <ChevronDownIcon aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel>Coming soon</DropdownMenuLabel>
-              {FUTURE_CHANNELS.map(({ label, icon: Icon }) => (
-                <DropdownMenuItem key={label} disabled>
-                  <Icon aria-hidden="true" />
-                  {label}
-                  <span className="ms-auto rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">Soon</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           <EnvironmentPill />
           <ThemeToggle />
 
@@ -143,15 +111,6 @@ export function AppHeader({ routes, route }) {
               </SheetHeader>
               <div className="flex flex-col gap-6 px-4">
                 <NavLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} vertical />
-                <div className="space-y-2">
-                  <p className="px-3 font-medium text-muted-foreground text-xs">Coming soon</p>
-                  {FUTURE_CHANNELS.map(({ label, icon: Icon }) => (
-                    <p key={label} className="flex items-center gap-2 px-3 py-1.5 text-muted-foreground text-sm opacity-60">
-                      <Icon className="size-4" aria-hidden="true" />
-                      {label}
-                    </p>
-                  ))}
-                </div>
               </div>
             </SheetContent>
           </Sheet>

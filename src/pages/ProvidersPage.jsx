@@ -3,9 +3,7 @@ import {
   CircleCheckIcon,
   EllipsisIcon,
   EyeIcon,
-  LockIcon,
   PencilIcon,
-  PlugZapIcon,
   PlusIcon,
   PowerIcon,
   PowerOffIcon,
@@ -183,7 +181,6 @@ export function ProvidersPage() {
   const [busyId, setBusyId] = useState(null);
 
   const enabledCount = providers.filter((p) => p.enabled).length;
-  const builtInCount = providers.filter(isReadOnly).length;
 
   const closeDialog = () => {
     setDialog(null);
@@ -224,7 +221,7 @@ export function ProvidersPage() {
         eyebrow="SMS gateway"
         title="Manage your"
         accent="providers"
-        description="Every SMS provider the messaging service can route through, built-in or added through the API."
+        description="Every SMS provider the messaging service can route through."
       >
         <RefreshButton onClick={reload} loading={loading} />
         <Button size="lg" className="rounded-full px-5 shadow-lg shadow-primary/25" onClick={() => setDialog({ type: 'register' })}>
@@ -233,11 +230,9 @@ export function ProvidersPage() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         <Stat icon={ServerIcon} label="Providers" value={<NumberTicker value={providers.length} />} />
         <Stat icon={CircleCheckIcon} label="Enabled" value={<NumberTicker value={enabledCount} />} tone="success" />
-        <Stat icon={LockIcon} label="Built-in" value={<NumberTicker value={builtInCount} />} />
-        <Stat icon={PlugZapIcon} label="Added via API" value={<NumberTicker value={providers.length - builtInCount} />} tone="primary" />
       </div>
 
       <ErrorAlert error={toggle.error} onDismiss={toggle.reset} />

@@ -90,8 +90,8 @@ export function SendSmsPage() {
     <>
       <PageHeader
         eyebrow="Single message"
-        title="Send an"
-        accent="SMS"
+        title="Send a"
+        accent="message"
         description="Pick a provider or let the server choose its primary one, then send one message to one recipient."
       />
 
@@ -155,7 +155,7 @@ export function SendSmsPage() {
               ) : (
                 <SendIcon aria-hidden="true" />
               )}
-              {send.pending ? 'Sending...' : 'Send SMS'}
+              {send.pending ? 'Sending...' : 'Send Message'}
             </Button>
           </div>
         </form>

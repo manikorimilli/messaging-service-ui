@@ -1,24 +1,14 @@
 import { useEffect, useState } from 'react';
-import { MailIcon, MenuIcon, MessageCircleIcon, PhoneIcon } from 'lucide-react';
+import { MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { EnvironmentPill, Logo } from './AppHeader.jsx';
-import { SearchButton, SearchPalette } from './SearchPalette.jsx';
 import { ThemeSwitcher } from './ThemeSwitcher.jsx';
 
-const FUTURE_CHANNELS = [
-  { label: 'Email', icon: MailIcon },
-  { label: 'Call', icon: PhoneIcon },
-  { label: 'WhatsApp', icon: MessageCircleIcon },
-];
-
-function SidebarLinks({ routes, route, onNavigate, onSearch, desktop = false }) {
+function SidebarLinks({ routes, route, onNavigate, desktop = false }) {
   return (
     <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6">
-      <div className="mb-5">
-        <SearchButton onOpen={onSearch} />
-      </div>
       <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</p>
       <nav aria-label="Main" className="space-y-1.5">
         {routes.map(({ key, label, icon: Icon }) => {
@@ -44,19 +34,6 @@ function SidebarLinks({ routes, route, onNavigate, onSearch, desktop = false }) 
           );
         })}
       </nav>
-
-      <div className="mt-8 border-t border-sidebar-border pt-6">
-        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">More channels</p>
-        <ul className="space-y-1">
-          {FUTURE_CHANNELS.map(({ label, icon: Icon }) => (
-            <li key={label} className="flex min-h-10 items-center gap-3 px-3 text-sm text-muted-foreground/70">
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              {label}
-              <span className="ms-auto rounded-md border border-sidebar-border px-1.5 py-0.5 text-[10px]">Soon</span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
@@ -77,11 +54,6 @@ function SidebarFooter() {
 
 export function AppSidebar({ routes, route }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const openSearch = () => {
-    setMenuOpen(false);
-    setSearchOpen(true);
-  };
 
   useEffect(() => {
     // Release the mobile dialog's focus trap if the viewport becomes desktop.
@@ -97,7 +69,7 @@ export function AppSidebar({ routes, route }) {
         <div className="mx-4 border-b border-sidebar-border px-2 pt-6 pb-5 text-sm">
           <Logo />
         </div>
-        <SidebarLinks routes={routes} route={route} onSearch={openSearch} desktop />
+        <SidebarLinks routes={routes} route={route} desktop />
         <SidebarFooter />
       </aside>
 
@@ -112,13 +84,11 @@ export function AppSidebar({ routes, route }) {
               <SheetTitle>Messaging console</SheetTitle>
               <SheetDescription className="sr-only">Main navigation</SheetDescription>
             </SheetHeader>
-            <SidebarLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} onSearch={openSearch} />
+            <SidebarLinks routes={routes} route={route} onNavigate={() => setMenuOpen(false)} />
             <SidebarFooter />
           </SheetContent>
         </Sheet>
       </header>
-
-      <SearchPalette open={searchOpen} onOpenChange={setSearchOpen} routes={routes} />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { CalendarClockIcon, SendIcon, ServerIcon, UsersIcon } from 'lucide-react';
+import { SendIcon, ServerIcon } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useTheme } from '@/lib/theme';
@@ -8,21 +8,17 @@ import { cn } from '@/lib/utils';
 import { AppSidebar } from './components/layout/AppSidebar.jsx';
 import { Backdrop } from './components/layout/Backdrop.jsx';
 import { config } from './config.js';
-import { BulkSmsPage } from './pages/BulkSmsPage.jsx';
 import { OverviewPage } from './pages/OverviewPage.jsx';
 import { ProvidersPage } from './pages/ProvidersPage.jsx';
-import { ScheduledJobsPage } from './pages/ScheduledJobsPage.jsx';
 import { SendSmsPage } from './pages/SendSmsPage.jsx';
 
 const ROUTES = [
   { key: 'providers', label: 'Providers', icon: ServerIcon, Page: ProvidersPage },
-  { key: 'send', label: 'Send SMS', icon: SendIcon, Page: SendSmsPage },
-  { key: 'bulk', label: 'Bulk SMS', icon: UsersIcon, Page: BulkSmsPage },
-  { key: 'scheduled', label: 'Scheduled jobs', icon: CalendarClockIcon, Page: ScheduledJobsPage },
+  { key: 'send', label: 'Send Message', icon: SendIcon, Page: SendSmsPage },
 ];
 
 // Pages reachable only by typing their address. They are not passed to the
-// sidebar or the search, so nothing in the app links to them.
+// sidebar, so nothing in the app links to them.
 const HIDDEN_ROUTES = [{ key: 'overview', Page: OverviewPage }];
 const ALL_ROUTES = [...ROUTES, ...HIDDEN_ROUTES];
 
