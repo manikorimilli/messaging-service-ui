@@ -17,6 +17,7 @@ import { EmptyState, LoadingState } from '../components/States.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useProviders } from '../hooks/useProviders.js';
 import { formatDateTime } from '../utils/format.js';
+import { describeSendTimeParameter, detectParameters } from '../utils/providerParams.js';
 import { validateBody, validatePhone } from '../utils/validation.js';
 
 function ResultDetail({ label, children, title }) {
@@ -26,6 +27,36 @@ function ResultDetail({ label, children, title }) {
       <dd className="truncate text-sm" title={title}>
         {children}
       </dd>
+    </div>
+  );
+}
+
+// Which form field fills each uaap parameter the chosen provider uses.
+const FIELD_FOR = { to: 'Recipient phone number', to_digits: 'Recipient phone number', text: 'Message' };
+
+function ProviderParameters({ provider }) {
+  const parameters = detectParameters(provider)
+    .sendTime.map(describeSendTimeParameter)
+    .filter(Boolean)
+    .filter((p, i, all) => all.findIndex((other) => other.uaap === p.uaap) === i);
+
+  return (
+    <div className="space-y-2 rounded-xl border bg-muted/30 p-4 text-sm" aria-live="polite">
+      <p className="font-medium">uaap parameters for {provider['display-name'] || provider.id}</p>
+      {parameters.length === 0 ? (
+        <p className="text-muted-foreground">
+          This provider uses none. The server still needs a recipient and a message.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {parameters.map((p) => (
+            <li key={p.uaap} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <code className="rounded-md border bg-background px-1.5 py-0.5 text-xs">{p.uaap}</code>
+              <span className="text-muted-foreground">from {FIELD_FOR[p.builtIn]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -73,17 +104,19 @@ export function SendSmsPage() {
   const [provider, setProvider] = useState('');
   const [to, setTo] = useState('');
   const [body, setBody] = useState('');
-  const [touched, setTouched] = useState({ to: false, body: false });
+  const [touched, setTouched] = useState({ provider: false, to: false, body: false });
   const send = useAsyncAction((input) => api.sendSms(input));
 
+  const selected = providersState.providers.find((p) => p.id === provider);
+  const providerError = provider ? null : 'Choose a provider';
   const toError = validatePhone(to);
   const bodyError = validateBody(body);
   const showToError = touched.to && Boolean(toError);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setTouched({ to: true, body: true });
-    if (toError || bodyError || send.pending) return;
+    setTouched({ provider: true, to: true, body: true });
+    if (providerError || toError || bodyError || send.pending) return;
     await send.run({ provider, to: to.trim(), body });
   }
 
@@ -93,7 +126,7 @@ export function SendSmsPage() {
         eyebrow="Single message"
         title="Send a"
         accent="message"
-        description="Pick a provider or let the server choose its primary one, then send one message to one recipient."
+        description="Pick a provider, fill in the uaap parameters it uses, then send one message to one recipient."
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-5">
@@ -114,8 +147,12 @@ export function SendSmsPage() {
               providers={providersState.providers}
               loading={providersState.loading}
               error={providersState.error}
+              invalid={touched.provider ? providerError : null}
+              onBlur={() => setTouched((t) => ({ ...t, provider: true }))}
               disabled={send.pending}
             />
+
+            {selected && <ProviderParameters provider={selected} />}
 
             <FormField
               id="send-to"

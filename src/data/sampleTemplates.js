@@ -46,7 +46,7 @@ export const GENERAL_TEMPLATES = [
 
 // "" (primary provider) is treated as Twilio.
 export function usesTwilioTemplates(providerId) {
-  return !providerId || providerId.toUpperCase() === 'TWILIO';
+  return providerId?.toUpperCase() === 'TWILIO';
 }
 
 export function templatesForProvider(providerId) {

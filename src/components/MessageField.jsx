@@ -28,8 +28,10 @@ export function MessageField({ id, provider, value, onChange, onBlur, error, dis
       error={error}
       description={
         twilio
-          ? 'Twilio (and the primary provider) only accept the test template values as the message body.'
-          : 'Any message text works with this provider.'
+          ? 'Twilio only accepts the test template values as the message body.'
+          : provider
+            ? 'Any message text works with this provider.'
+            : 'Choose a provider first. Some only accept fixed test messages.'
       }
       aside={
         <DropdownMenu>
