@@ -3,6 +3,7 @@
 import { config } from '../config.js';
 import { camelizeKeys } from '../utils/keys.js';
 import { toWritePayload } from '../utils/providerConfig.js';
+import { toBackendPlaceholders } from '../utils/providerParams.js';
 import * as mockApi from './mockApi.js';
 import * as realApi from './realApi.js';
 
@@ -22,8 +23,9 @@ export function buildBatchRequest({ provider, recipients, body }) {
 export const api = {
   listProviders: () => impl.listProviders(),
   getProvider: (id) => impl.getProvider(id),
-  registerProvider: (cfg) => impl.registerProvider(toWritePayload(cfg)),
-  updateProvider: (id, cfg) => impl.updateProvider(id, toWritePayload(cfg)),
+  // Saved configs always use the backend's {{name}} form: see toBackendPlaceholders.
+  registerProvider: (cfg) => impl.registerProvider(toWritePayload(toBackendPlaceholders(cfg))),
+  updateProvider: (id, cfg) => impl.updateProvider(id, toWritePayload(toBackendPlaceholders(cfg))),
   // The backend has no PATCH: enabling or disabling sends the full config.
   // Masked secrets (****) in the fetched config tell the backend to keep the stored values.
   async setProviderEnabled(id, enabled) {

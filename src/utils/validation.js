@@ -1,4 +1,5 @@
 import { AUTH_TYPES, BODY_FORMATS, MASKED_VALUE, RESPONSE_ONLY_FIELDS } from './providerConfig.js';
+import { detectParameters, placeholderProblems } from './providerParams.js';
 
 export const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
 export const PROVIDER_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -65,7 +66,10 @@ export function parseJson(text) {
 
 // Client-side checks that mirror the backend's provider rules.
 // "problems" block submission; "warnings" are informational.
-export function validateProviderConfig(cfg, { mode = 'create', pathId } = {}) {
+// requireVariables: every non send-time placeholder must have a "variables"
+// entry, as the backend requires. The register form turns it off because it
+// reports empty parameter boxes itself.
+export function validateProviderConfig(cfg, { mode = 'create', pathId, requireVariables = true } = {}) {
   const problems = [];
   const warnings = [];
   if (!isObject(cfg)) return { problems: ['The configuration must be a JSON object.'], warnings };
@@ -140,6 +144,14 @@ export function validateProviderConfig(cfg, { mode = 'create', pathId } = {}) {
 
   if (cfg.response === undefined || cfg.response === null) problems.push('response is missing');
   else if (!isObject(cfg.response)) problems.push('response must be an object');
+
+  problems.push(...placeholderProblems(cfg));
+  if (requireVariables) {
+    const variables = isObject(cfg.variables) ? cfg.variables : {};
+    for (const name of detectParameters(cfg).provider) {
+      if (!(name in variables)) problems.push(`{${name}} has no value. Add "${name}" to variables.`);
+    }
+  }
 
   const metadata = RESPONSE_ONLY_FIELDS.filter((f) => f in cfg);
   if (metadata.length) {

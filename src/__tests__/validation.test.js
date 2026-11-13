@@ -80,7 +80,7 @@ describe('validateProviderConfig', () => {
   });
 
   it('allows masked secrets on update but not on create', () => {
-    const cfg = { ...PROVIDER_EXAMPLE, variables: { 'auth-token': '****' } };
+    const cfg = { ...PROVIDER_EXAMPLE, variables: { ...PROVIDER_EXAMPLE.variables, 'auth-token': '****' } };
     expect(validateProviderConfig(cfg, { mode: 'create' }).problems.some((p) => p.includes('masked'))).toBe(true);
     expect(validateProviderConfig(cfg, { mode: 'update', pathId: 'PLIVO' }).problems).toEqual([]);
   });

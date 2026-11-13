@@ -3,10 +3,15 @@ import * as mock from '../api/mockApi.js';
 import { MOCK_PROVIDERS } from '../api/mockData.js';
 import { PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
 import {
+  BACKEND_BUILT_INS,
+  UAAP_PARAMETERS,
+  describeSendTimeParameter,
   detectParameters,
   isSendTimeParameter,
   missingParameters,
   parameterValue,
+  placeholderProblems,
+  toBackendPlaceholders,
   withParameterValues,
 } from '../utils/providerParams.js';
 import { validateProviderConfig } from '../utils/validation.js';
@@ -86,7 +91,7 @@ describe('withParameterValues', () => {
 });
 
 describe('parameters in the mock providers', () => {
-  it('detects both brace styles, and every provider parameter has a value in variables', () => {
+  it('finds every provider parameter, each with a value in variables', () => {
     for (const provider of MOCK_PROVIDERS) {
       const { provider: names, sendTime } = detectParameters(provider);
       expect(names.length, provider.id).toBeGreaterThan(0);
@@ -125,16 +130,73 @@ describe('register flow with parameters', () => {
     expect(missingParameters(provider, { account: 'A1', token: ' ' }, cfg.variables)).toEqual(['token', 'sender']);
   });
 
-  it('saves the entered values in variables and the mock accepts the config', async () => {
+  it('saves the entered values and the backend form of every placeholder', async () => {
     const values = { account: 'A1', token: 'demo-token', sender: 'DEMO' };
     const { provider } = detectParameters(cfg);
     expect(missingParameters(provider, values, cfg.variables)).toEqual([]);
     const ready = withParameterValues(cfg, values);
     expect(validateProviderConfig(ready, { mode: 'create' }).problems).toEqual([]);
 
-    await mock.registerProvider(ready);
+    await mock.registerProvider(toBackendPlaceholders(ready));
     const saved = await mock.getProvider('DEMO');
     expect(saved.variables).toEqual({ account: 'A1', token: '****', sender: 'DEMO' });
-    expect(saved.request.body.fields.text).toBe('{uaap.message.text}');
+    expect(saved.request.url).toBe('https://api.example.com/{{account}}/send');
+    expect(saved.request.body.fields).toEqual({ from: '{{sender}}', to: '{{to}}', text: '{{text}}' });
+  });
+});
+
+describe('uaap parameters', () => {
+  it('maps each uaap name to the backend built-in it stands for', () => {
+    expect(describeSendTimeParameter('uaap.message.to')).toEqual({ uaap: 'uaap.message.to', builtIn: 'to', source: 'recipient number' });
+    expect(describeSendTimeParameter('uaap.message.template')).toMatchObject({ builtIn: 'text' });
+    expect(describeSendTimeParameter('to_digits')).toMatchObject({ uaap: 'uaap.message.to_digits' });
+    expect(describeSendTimeParameter('uaap.message.unknown')).toBeNull();
+    expect(Object.values(UAAP_PARAMETERS).every((name) => BACKEND_BUILT_INS.includes(name))).toBe(true);
+  });
+
+  it('rewrites placeholders to {{name}} and leaves variables, ${ENV} and unknown uaap names alone', () => {
+    const before = {
+      variables: { token: '{keep}' },
+      request: {
+        url: 'https://x/${HOST}/{account}',
+        body: { fields: { a: '{uaap.message.to}', b: '{{ uaap.message.template }}', c: '{uaap.message.nope}', d: '{{to_digits}}' } },
+      },
+      response: { 'id-path': '$.id' },
+    };
+    expect(toBackendPlaceholders(before)).toEqual({
+      variables: { token: '{keep}' },
+      request: {
+        url: 'https://x/${HOST}/{{account}}',
+        body: { fields: { a: '{{to}}', b: '{{text}}', c: '{uaap.message.nope}', d: '{{to_digits}}' } },
+      },
+      response: { 'id-path': '$.id' },
+    });
+    expect(toBackendPlaceholders(null)).toBeNull();
+  });
+
+  it('reports what the backend would reject', () => {
+    const problems = placeholderProblems({
+      variables: { text: 'x', sender: 'S' },
+      request: {
+        url: 'https://x/{uaap.message.to}',
+        body: { fields: { a: '{uaap.message.nope}', b: '{api.key}', c: '{sender}' } },
+      },
+    });
+    expect(problems).toEqual([
+      '{uaap.message.nope} is not a known uaap parameter. Use one of: uaap.message.to, uaap.message.to_digits, uaap.message.text, uaap.message.template',
+      '{api.key} may contain only letters, digits, "_" and "-"',
+      'request.url cannot use {uaap.message.to}. Message values are not allowed in the URL.',
+      'variables.text clashes with the built-in {{text}}. Rename it.',
+    ]);
+    expect(placeholderProblems(PROVIDER_EXAMPLE)).toEqual([]);
+  });
+
+  it('requires a variables entry for every parameter unless the form reports it', () => {
+    const cfg = { ...PROVIDER_EXAMPLE, variables: { 'auth-token': 't' } };
+    expect(validateProviderConfig(cfg).problems).toEqual([
+      '{auth-id} has no value. Add "auth-id" to variables.',
+      '{from} has no value. Add "from" to variables.',
+    ]);
+    expect(validateProviderConfig(cfg, { requireVariables: false }).problems).toEqual([]);
   });
 });

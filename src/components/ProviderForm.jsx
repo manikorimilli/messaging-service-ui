@@ -7,7 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { MASKED_VALUE, PROVIDER_EXAMPLE } from '../utils/providerConfig.js';
-import { detectParameters, missingParameters, parameterValue, withParameterValues } from '../utils/providerParams.js';
+import {
+  describeSendTimeParameter,
+  detectParameters,
+  missingParameters,
+  parameterValue,
+  withParameterValues,
+} from '../utils/providerParams.js';
 import { parseJson, validateProviderConfig } from '../utils/validation.js';
 import { CodeWindow } from './CodeWindow.jsx';
 import { ErrorAlert } from './ErrorAlert.jsx';
@@ -66,12 +72,22 @@ function ParameterFields({ formId, parameters, variables, values, missing, onCha
         <div className="space-y-2">
           <p className="font-medium text-muted-foreground text-xs">Filled at send time</p>
           <ul className="flex flex-wrap gap-1.5">
-            {parameters.sendTime.map((name) => (
-              <li key={name}>
-                <code className="rounded-md border bg-background px-2 py-1 text-xs">{name}</code>
-              </li>
-            ))}
+            {parameters.sendTime.map((name) => {
+              const meaning = describeSendTimeParameter(name);
+              return (
+                <li key={name} className="flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-xs">
+                  <code>{name}</code>
+                  <span className={meaning ? 'text-muted-foreground' : 'text-destructive'}>
+                    · {meaning ? meaning.source : 'unknown'}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
+          <p className="text-muted-foreground text-xs">
+            Saved as the backend's <code className="text-foreground">{'{{to}}'}</code>,{' '}
+            <code className="text-foreground">{'{{to_digits}}'}</code> and <code className="text-foreground">{'{{text}}'}</code>.
+          </p>
         </div>
       )}
     </section>
@@ -113,7 +129,7 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
       return null;
     }
     const cfg = withEnteredParameters(parsed.value);
-    const result = validateProviderConfig(cfg, { mode, pathId: providerId });
+    const result = validateProviderConfig(cfg, { mode, pathId: providerId, requireVariables: !showParameters });
     const missing = showParameters ? missingParameters(parameters.provider, paramValues, parsed.value?.variables) : [];
     const problems = [...result.problems, ...missing.map((name) => `Enter a value for the ${name} parameter`)];
     setCheck({ ...result, problems, missing, cfg: problems.length ? null : cfg });
@@ -177,8 +193,10 @@ export function ProviderForm({ mode, providerId, initialText = '', onSubmit, onC
           <p className="text-muted-foreground text-sm">
             Paste the provider configuration or upload a <code className="text-foreground">.json</code> file. Each{' '}
             <code className="text-foreground">{'{name}'}</code> or <code className="text-foreground">{'{{name}}'}</code>{' '}
-            placeholder gets a box below for its value. Use raw values, not <code className="text-foreground">{'${ENV}'}</code>{' '}
-            placeholders.
+            placeholder gets a box below for its value, and is saved as <code className="text-foreground">{'{{name}}'}</code>.
+            Use <code className="text-foreground">{'{uaap.message.to}'}</code> and{' '}
+            <code className="text-foreground">{'{uaap.message.text}'}</code> for the recipient and the message. Use raw values,
+            not <code className="text-foreground">{'${ENV}'}</code> placeholders.
           </p>
         )}
 
